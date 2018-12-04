@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Administrator
  *
  */
-@RestController
+@RestController("rest-server-controller")
 public class RestServerController {
 
 	@Value("${username}")
