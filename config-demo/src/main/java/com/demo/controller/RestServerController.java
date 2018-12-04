@@ -5,9 +5,12 @@
  */
 package com.demo.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.demo.feign.FeignServerClient;
 
 /**
  * @author Administrator
@@ -22,6 +25,9 @@ public class RestServerController {
 	@Value("${password}")
 	private String password;
 	
+	@Autowired
+	private FeignServerClient feignServerClient;
+	
 	@GetMapping("/")
 	public void index() {
 		System.out.println("index Page");
@@ -29,7 +35,12 @@ public class RestServerController {
 	
 	@GetMapping("/accessConfigServer")
 	public String accessConfigServer() {
+		System.out.println(username);
 		return username + " : " + password;
 	}
 	
+	@GetMapping("/accessFeign")
+	public String accessFeign() {
+		return feignServerClient.feignService("config-demo");
+	}
 }
