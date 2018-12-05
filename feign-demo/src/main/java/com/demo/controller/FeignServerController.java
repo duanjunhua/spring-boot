@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.log4j.Log4j2;
+
 /**
  * @author Administrator
  *
  */
+@Log4j2
 @RestController
 @RequestMapping("/feign-server-controller")
 public class FeignServerController {
@@ -26,17 +29,18 @@ public class FeignServerController {
 	
 	@GetMapping("/")
 	public void index() {
-		System.out.println("index Page");
+		log.info("index Page");
 	}
 	
 	@GetMapping("/access_config_server")
 	public String accessConfigServer() {
-		System.out.println(username);
+		log.debug(username);
 		return username + " : " + password;
 	}
 	
 	@GetMapping("/feign_api")
 	public String feignApi(String client) {
+		log.info("Feign Api Calling Client...");
 		return "Feign Api data, " + client;
 	}
 }
