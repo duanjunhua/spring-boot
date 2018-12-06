@@ -1,4 +1,4 @@
-package com.demo.standalone;
+package com.standalone;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -11,7 +11,7 @@ import lombok.extern.log4j.Log4j2;
 public class CustomXmlConfigService {
 
 	public String testXmlFileConfigBean() {
-		log.info("Successful called Xml File config Bean");
+		log.info("This is not a bean under springboot scan folder.");
 		return "success called";
 	}
 }

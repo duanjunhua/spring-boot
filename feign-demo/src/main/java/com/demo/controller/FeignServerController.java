@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.demo.Response;
-import com.demo.standalone.CustomXmlConfigService;
+import com.standalone.CustomXmlConfigService;
 
 import lombok.extern.log4j.Log4j2;
 
