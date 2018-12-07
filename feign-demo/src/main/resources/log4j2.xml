@@ -2,7 +2,7 @@
 <configuration status="WARN">
     <!--全局参数-->
     <Properties>
-        <Property name="pattern">%d{yyyy-MM-dd HH:mm:ss,SSS} %5p %c{1}:%L - %m%n</Property>
+        <Property name="pattern">%d{yyyy-MM-dd HH:mm:ss,SSS} %5p %c{1}.%M - %m%n</Property>
     </Properties>
     
     <Loggers>
@@ -11,7 +11,7 @@
             <AppenderRef ref="rolling_file"></AppenderRef>
         </Root>
         <!--只将com.kk.springboot.demo写到文件-->
-        <Logger name="com.kk.springboot.demo" level="DEBUG">
+        <Logger name="com.demo" level="DEBUG">
             <AppenderRef ref="file"></AppenderRef>
         </Logger>
     </Loggers>
