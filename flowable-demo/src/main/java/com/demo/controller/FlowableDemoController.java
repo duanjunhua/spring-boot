@@ -67,30 +67,23 @@ public class FlowableDemoController {
     }
 
     /**
-     *	 批准
+     *	任务审批
      */
-    @GetMapping(value = "apply")
-    public String apply(String taskId) {
+    @GetMapping(value = "completeTask")
+    public String completeTask(String taskId, String userId, Boolean result) {
+    	
+    	//获取流程实例
+    	//taskService.claim(taskId, userId);
+    	
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         if (task == null) {
             throw new RuntimeException("流程不存在");
         }
         //通过审核
         HashMap<String, Object> map = new HashMap<>();
-        map.put("outcome", "通过");
+        map.put("outcome", result ? "通过" : "驳回");
         taskService.complete(taskId, map);
-        return "processed ok!";
-    }
-
-    /**
-     * 	拒绝
-     */
-    @GetMapping(value = "reject")
-    public String reject(String taskId) {
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("outcome", "驳回");
-        taskService.complete(taskId, map);
-        return "reject";
+        return (String)map.get("outcome");
     }
     
     /**

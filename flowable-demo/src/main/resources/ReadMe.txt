@@ -7,7 +7,7 @@
 	3。查询待办列表：
 		http://localhost:8080/flowable-demo-controller/list?userId=123
 	4.同意或驳回：
-		http://localhost:8080/flowable-demo-controller/apply?taskId=3527511
-		http://localhost:8080/flowable-demo-controller/reject?taskId=3527511
+		http://localhost:8080/flowable-demo-controller/completeTask?taskId=3527511&userId=123&result=true
+		http://localhost:8080/flowable-demo-controller/completeTask?taskId=3527511&userId=123&result=false
 	5。生成流程图：
 		http://localhost:8080/flowable-demo-controller/processDiagram?processId=3527505

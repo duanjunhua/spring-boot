@@ -48,6 +48,7 @@
     </process>
     <bpmndi:BPMNDiagram id="BPMNDiagram_Expense">
         <bpmndi:BPMNPlane bpmnElement="Expense" id="BPMNPlane_Expense">
+        	<!-- 流程节点图 -->
             <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
                 <omgdc:Bounds height="30.0" width="30.0" x="285.0" y="135.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
@@ -66,6 +67,7 @@
             <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
                 <omgdc:Bounds height="28.0" width="28.0" x="771.0" y="281.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
+            <!-- 流程指向图 -->
             <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
                 <omgdi:waypoint x="315.0" y="150.0"></omgdi:waypoint>
                 <omgdi:waypoint x="405.0" y="150.0"></omgdi:waypoint>
