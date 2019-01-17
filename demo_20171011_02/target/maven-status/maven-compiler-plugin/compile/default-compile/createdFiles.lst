@@ -1,6 +1,0 @@
-com\djh\demo\DemoApplication.class
-com\djh\demo\service\UserService.class
-com\djh\demo\mapper\UserMapper.class
-com\djh\demo\Response.class
-com\djh\demo\beans\User.class
-com\djh\demo\controller\UserController.class
