@@ -12,6 +12,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 public class HystrixClientApplication {
 
+	/**
+	 * hystrix acturator address: http://localhost:8082/hystrix.stream
+	 */
 	public static void main(String[] args) {
 		SpringApplication.run(HystrixClientApplication.class, args);
 	}
