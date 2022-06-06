@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boot.springboot.dao.mybatis.UserDomainMapper">
+    <select id="findByLoginName" resultType="com.boot.springboot.domain.mybatis.UserDomain" parameterType="java.lang.String">
+        select id, name, login_name loginName from xt_user where login_name = #{loginName}
+    </select>
+
+    <select id="findAll" resultType="com.boot.springboot.domain.mybatis.UserDomain">
+        select id, name, login_name loginName from xt_user
+    </select>
+
+</mapper>
