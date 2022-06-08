@@ -1,0 +1,39 @@
+server:
+  port: 8888
+
+# 数据源配置
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://localhost:3306/vue?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
+    # MySQL8版本以上驱动包制定新的驱动类
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 数据源其他配置，在DriudConfig配置类中手动绑定
+    initial-size: 8
+    min-idle: 5
+    max-active: 20
+    max-wait: 60000
+    time-between-eviction-runs-millis: 60000
+    min-evictable-idle-time-millis: 30000
+    validation-query: select 1 from dual
+
+# Mybatis Plus配置
+mybatis-plus:
+  type-aliases-package: com.boot.vue.entity
+  # xxxMapper.xml路径
+  mapper-locations: classpath:com/boot/vue/mapper/xml/**.xml
+
+# 日志级别，会打印sql语句
+logging:
+  level:
+    com.boot.vue.mapper: debug
+
+
+## JSON Web Token(JWT)是一个非常轻巧的规范。这个规范允许我们使用JWT在用 户和服务器之间传递安全可靠的信息。其中 JWT 中可以包含用户信息
+# JJWT 是一个提供端到端的JWT创建和验证的Java库。永远免费和开源(Apache License，版本2.0)，JJWT很容易使用和理解
+vue:
+  jwt:
+    config:
+      secretKey: duanjh
+      expires: 604800 # 单位秒，7天
