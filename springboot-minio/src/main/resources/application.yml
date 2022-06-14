@@ -1,0 +1,13 @@
+server:
+  port: 8488
+
+# MINIO配置
+minio:
+  # MINIO服务所在地址
+  endpoint: http://localhost:9000
+  # 存储桶名称
+  bucketName: jdyh
+  # 访问的key
+  accessKey: admin
+  #访问的密钥
+  secretKey: admin_123qwe!@#
