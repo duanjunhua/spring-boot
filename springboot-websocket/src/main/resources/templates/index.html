@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+</head>
+<body>
+    Hello
+    <script>
+
+        let websocket = null;
+        if('WebSocket' in window){
+            //创建WebSocket对象
+            websocket = new WebSocket("ws://127.0.0.1:8080/ws/server");
+
+            //连接成功
+            websocket.onopen = function (){
+                swal("已连接", {
+                    button: false,
+                    timer: 1000
+                });
+            }
+
+            //接收到消息
+            websocket.onmessage = function (msg){
+                //处理消息
+                swal(msg.data, {
+                    button: false,
+                    timer: 4000
+                });
+            }
+
+            websocket.onclose = function (){
+                swal("websocket已关闭");
+            }
+
+            websocket.onerror = function (){
+                swal("websocket出错");
+            }
+        }else{
+            swal("很遗憾，您的浏览器不支持WebSocket！");
+        }
+    </script>
+</body>
+</html>
