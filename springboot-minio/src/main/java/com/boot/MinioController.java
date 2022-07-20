@@ -1,20 +1,21 @@
 package com.boot;
 
-import cn.hutool.core.io.IoUtil;
-import com.boot.util.MinIoUtils;
+import cn.hutool.json.JSONObject;
+import com.boot.config.MinioConfig;
+import com.boot.util.FileUtils;
+import com.boot.util.MinioUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.minio.ObjectWriteResponse;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.List;
+import java.io.InputStream;
 
 /**
  * @Author: Michael J H Duan
@@ -27,27 +28,31 @@ import java.util.List;
 public class MinioController {
 
     @Autowired
-    MinIoUtils minIoUtils;
+    MinioConfig config;
+
+    @GetMapping(value = {"/", "*"})
+    @ResponseBody
+    public String minio(){
+        return MinioUtil.getBasicUrl();
+    }
 
     /**
      * 上传
      */
     @PostMapping("/upload")
     @ResponseBody
-    public Object upload(MultipartFile file) throws Exception{
-        List<String> result = minIoUtils.upload(new MultipartFile[]{file});
-        return result.get(0);
+    public void upload(MultipartFile file) throws Exception{
+        ObjectWriteResponse response = MinioUtil.uploadFile(config.getBucketName(), file, file.getOriginalFilename());
+        System.out.println(response);
     }
 
     /**
-     * 预览
+     * 下载文件
      */
     @GetMapping("/download/{fileName}")
-    public void download(@PathVariable("fileName") String fileName, HttpServletResponse response) throws IOException {
-        ResponseEntity<byte[]> download = minIoUtils.download(fileName);
-        ServletOutputStream outputStream = response.getOutputStream();
-        IoUtil.copy(new ByteArrayInputStream(download.getBody()), outputStream);
-        return;
+    public void download(@PathVariable("fileName") String fileName, HttpServletResponse response) throws Exception {
+        InputStream is = MinioUtil.getObject(config.bucketName, fileName, 0, 1024);
+
     }
 
     /**
@@ -55,15 +60,8 @@ public class MinioController {
      */
     @GetMapping("/preview/{fileName}")
     public void Preview(@PathVariable String fileName, HttpServletResponse response) throws Exception {
-        ResponseEntity<byte[]> download = minIoUtils.download(fileName);
-
-        ByteArrayInputStream fis = new ByteArrayInputStream(download.getBody());
-        ServletOutputStream os = response.getOutputStream();
-
-        response.setContentType(download.getHeaders().getContentType().getType());
-        byte [] b = new byte[1024*8];
-        while(fis.read(b)!=-1){
-            os.write(b);
-        }
+        InputStream object = MinioUtil.getObject(config.getBucketName(), fileName);
+        ServletOutputStream outputStream = response.getOutputStream();
+        IOUtils.copy(object, outputStream);
     }
 }

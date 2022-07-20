@@ -11,3 +11,10 @@ minio:
   accessKey: admin
   #访问的密钥
   secretKey: admin_123qwe!@#
+
+# 设置上传文件大小
+spring:
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
