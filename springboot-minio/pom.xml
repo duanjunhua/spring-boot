@@ -56,6 +56,13 @@
             <version>2.2.1</version>
         </dependency>
 
+        <!-- Alibaba Sentinel -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-sentinel</artifactId>
+            <version>2.2.0.RELEASE</version>
+        </dependency>
+
         <dependency>
             <groupId>xyz.cofe</groupId>
             <artifactId>jacob</artifactId>
