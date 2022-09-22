@@ -1,0 +1,27 @@
+server:
+  port: 7000
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    # Nacos
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    # 网关
+    gateway:
+      discovery:
+        locator:
+          enabled: true # 让gateway可以发现Nacos中的微服务
+          # 不配置路由的形式，默认为Nacos服务名+请求地址，只要按照网关地址/微服务/接口的格式去访问，就可以得到成功响应
+
+#      routes: # 路由数组[路由 就是指定当请求满足什么条件的时候转到哪个微服务]
+#        - id: product_route # 当前路由的标识，要求唯一；路由标识符，区别于其他 Route。
+#          uri: lb://service-product # lb指的是从nacos中按照名称获取微服务,并遵循负载均衡策略；路由指向的目的地 uri，即客户端请求最终被转发到的微服务
+##          uri: http://localhost:8081 # 请求要转发的地址，无注册中心时可使用
+#          order: 1 # 路由的优先级,数字越小级别越高；用于多个 Route 之间的排序，数值越小排序越靠前，匹配优先级越高。
+#          predicates: # 断言(就是路由转发要满足的条件)；断言的作用是进行条件判断，只有断言都返回真，才会真正的执行路由
+#            - Path=/product-serv/** # 当请求路径满足Path指定的规则时,才进行路由转发，网关地址/product-serv/接口
+#          filters: # 过滤器用于修改请求和响应信息，拦截器
+#            - StripPrefix=1 # 转发之前去掉1层路径，用于截断原始请求的路径

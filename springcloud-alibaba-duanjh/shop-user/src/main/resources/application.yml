@@ -1,0 +1,16 @@
+server:
+  port: 8071
+spring:
+  application:
+    name: service-user
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql:///springcloud_alibaba?serverTimezone=UTC&useUnicode=true&characterEncoding=uft-8&useSSL=true
+    username: root
+    password: root
+  jpa:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect

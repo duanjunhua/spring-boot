@@ -1,0 +1,28 @@
+server:
+  port: 8091
+  tomcat:
+    max-threads: 10 #tomcat的最大并发值修改为10,默认是200
+
+spring:
+  application:
+    name: service-order
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql:///springcloud_alibaba?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    username: root
+    password: root
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        hbm2ddl:
+          auto: update
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+# 开启Feign对Sentinel的支持
+feign:
+  sentinel:
+    enabled: true
