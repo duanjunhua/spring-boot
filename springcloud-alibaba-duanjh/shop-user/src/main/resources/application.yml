@@ -5,7 +5,7 @@ spring:
     name: service-user
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql:///springcloud_alibaba?serverTimezone=UTC&useUnicode=true&characterEncoding=uft-8&useSSL=true
+    url: jdbc:mysql:///springcloud_alibaba?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
     username: root
     password: root
   jpa:
@@ -14,3 +14,18 @@ spring:
         hbm2ddl:
           auto: update
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+
+  zipkin:
+    # zipkin server的请求地址
+    base-url: http://127.0.0.1:9411/
+    # 让Nacos把他作为一个URL，而不要当成服务名
+    discovery-client-enabled: false
+
+  sleuth:
+    sampler:
+      # 采样的百分比
+      probability: 1.0
+
+# RocketMQ
+rocketmq:
+  name-server: 127.0.0.1:9876 #rocketmq服务地址

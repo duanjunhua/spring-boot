@@ -25,3 +25,14 @@ spring:
 #            - Path=/product-serv/** # 当请求路径满足Path指定的规则时,才进行路由转发，网关地址/product-serv/接口
 #          filters: # 过滤器用于修改请求和响应信息，拦截器
 #            - StripPrefix=1 # 转发之前去掉1层路径，用于截断原始请求的路径
+
+  zipkin:
+    # zipkin server的请求地址
+    base-url: http://127.0.0.1:9411/
+    # 让Nacos把他作为一个URL，而不要当成服务名
+    discovery-client-enabled: false
+
+  sleuth:
+    sampler:
+      # 采样的百分比
+      probability: 1.0

@@ -19,3 +19,14 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+
+  zipkin:
+    # zipkin server的请求地址
+    base-url: http://127.0.0.1:9411/
+    # 让Nacos把他作为一个URL，而不要当成服务名
+    discovery-client-enabled: false
+
+  sleuth:
+    sampler:
+      # 采样的百分比
+      probability: 1.0

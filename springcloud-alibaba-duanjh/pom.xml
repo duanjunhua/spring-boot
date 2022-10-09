@@ -15,6 +15,7 @@
         <module>shop-product</module>
         <module>shop-order</module>
         <module>api-gateway</module>
+        <module>mq-service</module>
     </modules>
 
     <groupId>com.duanjh</groupId>
@@ -46,6 +47,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- 链路追踪 Sleuth -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-sleuth-dependencies</artifactId>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
