@@ -1,0 +1,15 @@
+server:
+  port: 7980
+
+spring:
+  application:
+    name: mq-service
+
+
+rocketmq:
+  name-server: 127.0.0.1:9876 #rocketmq服务地址
+  producer:
+    group: base_group
+    send-message-timeout: 5000
+    retry-times-when-send-failed: 2
+    max-message-size: 4194304
