@@ -3,7 +3,7 @@
 ### 系统架构演变
 系统架构经过了如下几个过程：
 - 单体应用架构：
-  ![img.png](img.png)
+  ![img.png](imgs/img.png)
   - 特点：适用流量小的网站
   - 优点：
     - 项目架构简单，小型项目的话， 开发成本低
@@ -13,7 +13,7 @@
     - 项目模块之间紧密耦合，单点容错率低
     - 无法针对不同模块进行针对性优化和水平扩展
 - 垂直应用架构
-![img_1.png](img_1.png)
+![img_1.png](imgs/img_1.png)
   - 优点：
     - 系统拆分实现了流量分担，解决了并发问题，而且可以针对不同模块进行优化和水平扩展
     - 一个系统的问题不会影响到其他系统，提高容错率
@@ -21,20 +21,20 @@
     - 系统之间相互独立， 无法进行相互调用
     - 系统之间相互独立， 会有重复的开发任务
 - 分布式架构
-![img_2.png](img_2.png)
+![img_2.png](imgs/img_2.png)
   - 优点：
     - 抽取公共的功能为服务层，提高代码复用性
   - 缺点：
     - 系统间耦合度变高，调用关系错综复杂，难以维护
 - SOA架构
-![img_3.png](img_3.png)
+![img_3.png](imgs/img_3.png)
   - 优点：
     - 使用注册中心解决了服务间调用关系的自动调节
   - 缺点：
     - 服务间会有依赖关系，一旦某个环节出错会影响较大( 服务雪崩 )
     - 服务关心复杂，运维、测试部署困难
 - 微服务架构
-![img_4.png](img_4.png)
+![img_4.png](imgs/img_4.png)
   - 优点：
     - 服务原子化拆分，独立打包、部署和升级，保证每个微服务清晰的任务划分，利于扩展
     - 微服务之间采用Restful等轻量级http协议相互调用
@@ -53,9 +53,9 @@
 - **RPC(Remote Promote Call)**：进程间通信方式。允许像调用本地服务一样调用远程服务，主要目标就是让远程服务调用更简单、透明
 #### 服务网关
     API网关直面意思是将所有API调用统一接入到API网关层，由网关层统一接入和输出。一个网关的基本功能有：统一接入、安全防护、协议适配、流量管控、长短链接支持、容错能力。有了网关之后，各个API服务提供团队可以专注于自己的的业务逻辑处理，而API网关更专注于安全、流量、路由等问题
-![img_5.png](img_5.png)
+![img_5.png](imgs/img_5.png)
 #### 服务容错
-![img_6.png](img_6.png)
+![img_6.png](imgs/img_6.png)
 服务容错的三个核心思想是
 - 不被外界环境影响
 - 不被上游请求压垮
@@ -122,31 +122,31 @@
   ```
 ### 服务容错
 - 由于服务与服务之间的依赖性，故障会传播，会对整个微服务系统造成灾难性的严重后果，这就是服务故障的 “雪崩效应”
-![img_8.png](img_8.png)
+![img_8.png](imgs/img_8.png)
 - 常见容错方案
   - **隔离**
     
     它是指将系统按照一定的原则划分为若干个服务模块，各个模块之间相对独立，无强依赖。当有故障发生时，能将问题和影响隔离在某个模块内部，而不扩散风险，不波及其它模块，不影响整体的系统服务。常见的隔离方式有：线程池隔离和信号量隔离
-  ![img_9.png](img_9.png)
+  ![img_9.png](imgs/img_9.png)
   - **超时**
   
     在上游服务调用下游服务的时候，设置一个最大响应时间，如果超过这个时间，下游未作出反应，就断开请求，释放掉线程。
-  ![img_10.png](img_10.png)
+  ![img_10.png](imgs/img_10.png)
   - **限流**
     
     限流就是限制系统的输入和输出流量已达到保护系统的目的。为了保证系统的稳固运行,一旦达到的需要限制的阈值,就需要限制流量并采取少量措施以完成限制流量的目的。
-  ![img_11.png](img_11.png)
+  ![img_11.png](imgs/img_11.png)
   - **熔断**
 
     在互联网系统中，当下游服务因访问压力过大而响应变慢或失败，上游服务为了保护系统整体的可用性，可以暂时切断对下游服务的调用。这种牺牲局部，保全整体的措施就叫做熔断。
     - 熔断关闭状态（Closed）：服务没有故障时，熔断器所处的状态，对调用方的调用不做任何限制
     - 熔断开启状态（Open）：后续对该服务接口的调用不再经过网络，直接执行本地的fallback方法
     - 半熔断状态（Half-Open）：尝试恢复服务调用，允许有限的流量调用该服务，并监控调用成功率。如果成功率达到预期，则说明服务已恢复，进入熔断关闭状态；如果成功率仍旧很低，则重新进入熔断关闭状态
-  ![img_12.png](img_12.png)
+  ![img_12.png](imgs/img_12.png)
   - **降级**
 
     降级其实就是为服务提供一个托底方案，一旦服务无法正常调用，就使用托底方案。
-  ![img_13.png](img_13.png)
+  ![img_13.png](imgs/img_13.png)
 
 - 微服务集成Sentinel非常简单, 只需要加入Sentinel的依赖即可
 ```
@@ -158,7 +158,7 @@
 ### 服务网关
 
     所谓的API网关，就是指系统的统一入口，它封装了应用程序的内部结构，为客户端提供统一服务，一些与业务本身功能无关的公共逻辑可以在这里实现，诸如认证、鉴权、监控、路由转发等等。
-![img_14.png](img_14.png)
+![img_14.png](imgs/img_14.png)
 #### 业界比较流行的网关
 - Ngnix+lua：使用nginx的反向代理和负载均衡可实现对api服务器的负载均衡及高可用；lua是一种脚本语言,可以来编写一些简单的逻辑, nginx支持lua脚本
 - Kong
@@ -180,7 +180,7 @@
   - **predicate**：断言的作用是进行条件判断，只有断言都返回真，才会真正的执行路由。
   - **filter**：过滤器用于修改请求和响应信息。
 - 执行流程
-![img_15.png](img_15.png)
+![img_15.png](imgs/img_15.png)
   执行流程大体如下：
 1. Gateway Client向Gateway Server发送请求
 2. 请求首先会被HttpWebHandlerAdapter进行提取组装成网关上下文
@@ -192,7 +192,7 @@
 #### 常见链路追踪技术：
 - cat：由大众点评开源，基于Java开发的实时应用监控平台，包括实时应用监控，业务监控
 - zipkin：由Twitter公司开源，开放源代码分布式的跟踪系统，用于收集服务的定时数据，以解决微服务架构中的延迟问题，包括：数据的收集、存储、查找和展现。
-![img_16.png](img_16.png)
+![img_16.png](imgs/img_16.png)
   - Collector：收集器组件，它主要用于处理从外部系统发送过来的跟踪信息，将这些信息转换为Zipkin内部处理的 Span 格式，以支持后续的存储、分析、展示等功能。
   - Storage：存储组件，它主要对处理收集器接收到的跟踪信息，默认会将这些信息存储在内存中，我们也可以修改此存储策略，通过使用其他存储组件将跟踪信息存储到数据库中。
   - RESTful API：API 组件，它主要用来提供外部访问接口。
@@ -204,16 +204,16 @@
 ### RocketMQ的架构及概念
 #### MQ介绍
 MQ（Message Queue）是一种跨进程的通信机制，用于传递消息。通俗点说，就是一个先进先出的数据结构。
-![img_17.png](img_17.png)
+![img_17.png](imgs/img_17.png)
 #### MQ的应用场景
 - 异步解耦
 
 异步解耦是消息队列 MQ 的主要特点，主要目的是减少请求响应时间和解耦。主要的使用场景就是将**比较耗时而且不需要即时（同步）返回结果**的操作作为消息放入消息队列。
-![img_19.png](img_19.png)
+![img_19.png](imgs/img_19.png)
 - 流量削峰
 
   流量削峰也是消息队列 MQ 的常用场景，一般在秒杀或团队抢购(高并发)活动中使用广泛。
-![img_18.png](img_18.png)
+![img_18.png](imgs/img_18.png)
 #### 常见MQ产品
 - ZeroMQ：号称最快的消息队列系统，尤其针对大吞吐量的需求场景。扩展性好，开发比较灵活，采用C语言实现，实际上只是一个socket库的重新封装，如果做为消息队列使用，需要开发大量的代码。ZeroMQ仅提供非持久性的队列，也就是说如果down机，数据将会丢失。
 - RabbitMQ：使用erlang语言开发，性能较好，适合于企业级的开发。但是不利于做二次开发和维护。
@@ -221,7 +221,7 @@ MQ（Message Queue）是一种跨进程的通信机制，用于传递消息。�
 - RocketMQ：阿里巴巴的MQ中间件，由java语言开发，性能非常好，能够撑住双十一的大流量，而且使用起来很简单。
 - Kafka：Kafka是Apache下的一个子项目，是一个高性能跨语言分布式Publish/Subscribe消息队列系统，相对于ActiveMQ是一个非常轻量级的消息系统，除了性能非常好之外，还是一个工作良好的分布式系统。
 #### RocketMQ架构
-![img_7.png](img_7.png)
+![img_7.png](imgs/img_7.png)
 - 整体可以分成4个角色，分别是：NameServer，Broker，Producer，Consumer
   - Broker(邮递员)：Broker是RocketMQ的核心，负责消息的接收，存储，投递等功能
   - NameServer(邮局)：消息队列的协调者，Broker向它注册路由信息，同时Producer和Consumer向其获取路由信息
@@ -243,17 +243,202 @@ MQ（Message Queue）是一种跨进程的通信机制，用于传递消息。�
 - 首先把项目中各种配置全部都放到一个集中的地方进行统一管理，并提供一套标准的接口。
 - 当各个服务需要获取配置的时候，就来配置中心的接口拉取自己的配置。
 - 当配置中心中的各种参数有更新的时候，也能通知到各个服务实时的过来同步最新的信息，使之动态更新。
-![img_20.png](img_20.png)
+![img_20.png](imgs/img_20.png)
 #### 常见服务配置中心
 - Apollo：Apollo是由携程开源的分布式配置中心。特点有很多，比如：配置更新之后可以实时生效，支持灰度发布功能，并且能对所有的配置进行版本管理、操作审计等功能，提供开放平台API。
 - Disconf：Disconf是由百度开源的分布式配置中心。它是基于Zookeeper来实现配置变更后实时通知和生效的
 - SpringCloud Config：这是Spring Cloud中带的配置中心组件。它和Spring是无缝集成，使用起来非常方便，并且它的配置存储支持Git。不过它没有可视化的操作界面，配置的生效也不是实时的，需要重启或去刷新。
 - Nacos：是SpingCloud alibaba技术栈中的一个组件，既可以作为服务配置中心，也可作为服务注册中心
+#### Nacos Config配置
+- 服务中添加Nacos配置依赖
+```
+<dependency>
+  <groupId>com.alibaba.cloud</groupId>
+  <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+- 在微服务中添加nacos config的配置
+  
+  **注意:不能使用原来的application.yml作为配置文件，而是新建一个bootstrap.yml作为配置文件**
+```
+配置文件优先级(由高到低):
+  bootstrap.properties -> bootstrap.yml -> application.properties -> application.yml
+  
+  spring:
+    application:
+      name: nacos-config
+    cloud:
+      nacos:
+        config:
+          server-addr: 127.0.0.1:8848 #nacos中心地址
+          file-extension: yaml # 配置文件格式
+    profiles:
+      active: dev # 环境标识
+      
+  Nacos配置中心配置列表进行新建的Data ID不能随便写，要跟配置文件中的对应，即${spring.application.name}-${spring-profiles}.${spring.cloud.nacos.config.file-extension}，在此处为：nacos-config-dev.yaml
+```
+- 配置文件：
+![img.png](imgs/nacos-config.png)
+- 开启配置的动态刷新功能
+```
+/**
+ * @Author: Michael J H Duan
+ * @Date: 2022-10-10
+ * @Version: V1.0
+ * @Description:
+ */
+@RestController
+@RefreshScope //只需要在需要动态读取配置的类上添加此注解就可以
+public class IndexController {
 
+    @Value("${nacos.config.val}")
+    private String nacosConfigVal;
 
+    @GetMapping("/")
+    public String index(){
+        return nacosConfigVal;
+    }
+}
+```
+- 配置共享
+  - 在nacos中定义一个DataID为all-service.yaml的配置，用于所有微服务共享
+  ```
+  spring:
+    datasource:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql:///springcloud_alibaba?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
+      username: root
+      password: root
+    jpa:
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+            hbm2ddl:
+              auto: update
+    cloud:
+      nacos:
+        discovery:
+          server-addr: 127.0.0.1:8848
+  
+    zipkin:
+      # zipkin server的请求地址
+      base-url: http://127.0.0.1:9411/
+      # 让Nacos把他作为一个URL，而不要当成服务名
+      discovery-client-enabled: false
+  ```
+  - 在nacos的中修改service-product.yaml中为下面内容
+  ```
+  server:
+    port: 8081
 
-
-
+  config:
+    appName: product
+  ```
+  - 修改bootstrap.yaml
+  ```
+  spring:
+    application:
+      name: service-product
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848 #nacos中心地址
+        file-extension: yaml # 配置文件格式
+        shared-dataids: all-service.yaml # 配置要引入的配置
+        refreshable-dataids: all-service.yaml # 配置要实现动态配置刷新的配置
+  profiles:
+    active: dev # 环境标识
+  ```
+- Nacos的几个概念：
+  - **命名空间(Namespace)**：命名空间可用于进行不同环境的配置隔离。一般一个环境划分到一个命名空间
+  - **配置分组(Group)**：配置分组用于将不同的服务可以归类到同一分组。一般将一个项目的配置分到一组
+  - **配置集(Data ID)**：在系统中，一个配置文件通常就是一个配置集。一般微服务的配置就是一个配置集
+![img.png](imgs/Nacoscontent.png)
+### 分布式事务-Seata
+  分布式事务就是为了保证不同数据库的数据一致性
+- 分布式事务三种角色：
+  - AP：Application应用系统（微服务）
+  - TM：Transaction Manager事务管理器（全局事务管理器）
+  - RM：Resource Manager资源管理器（数据库）
+- Seata主要三个组件：
+  - TC：Transaction Coordinator 事务协调器，管理全局的分支事务的状态，用于全局性事务的提交和回滚
+  - TM：Transaction Manager 事务管理器，用于开启、提交或者回滚全局事务
+- RM：Resource Manager 资源管理器，用于分支事务上的资源管理，向TC注册分支事务，上报分支事务的状态，接受TC的命令来提交或者回滚分支事务
+![img.png](imgs/seata.png)
+Seata的执行流程如下：
+1. A服务的TM向TC申请开启一个全局事务，TC就会创建一个全局事务并返回一个唯一的XID
+2. A服务的RM向TC注册分支事务，并将其纳入XID对应全局事务的管辖
+3. A服务执行分支事务，向数据库做操作
+4. A服务开始远程调用B服务，此时XID会在微服务的调用链上传播
+5. B服务的RM向TC注册分支事务，并将其纳入XID对应的全局事务的管辖
+6. B服务执行分支事务，向数据库做操作
+7. 全局事务调用链处理完毕，TM根据有无异常向TC发起全局事务的提交或者回滚
+8. TC协调其管辖之下的所有分支事务， 决定是否回滚
+- 在微服务工程数据库中初始化Seata记录事务要用到的表
+```sql
+CREATE TABLE `undo_log`(
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` BIGINT(20) NOT NULL,
+  `xid` VARCHAR(100) NOT NULL,
+  `context` VARCHAR(128) NOT NULL,
+  `rollback_info` LONGBLOB NOT NULL,
+  `log_status` INT(11) NOT NULL,
+  `log_created` DATETIME NOT NULL,
+  `log_modified` DATETIME NOT NULL,
+  `ext` VARCHAR(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
+) ENGINE = INNODB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8;
+```
+- 使用Seata需要在分布式控制的微服务中引入相关依赖
+```xml
+<dependency>
+  <groupId>com.alibaba.cloud</groupId>
+  <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+</dependency>
+<dependency>
+  <groupId>com.alibaba.cloud</groupId>
+  <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+- Seata 是通过代理数据源实现事务分支的，所以需要配置 io.seata.rm.datasource.DataSourceProxy 的Bean，且是 @Primary默认的数据源，否则事务不会回滚，无法实现分布式事务
+```java
+@Configuration
+public class DataSourceProxyConfig {
+  @Bean
+  @ConfigurationProperties(prefix = "spring.datasource")
+  public DruidDataSource druidDataSource() {
+    return new DruidDataSource();
+  }
+  @Primary
+  @Bean
+  public DataSourceProxy dataSource(DruidDataSource druidDataSource) {
+    return new DataSourceProxy(druidDataSource);
+  }
+}
+```
+- 在微服务工程的resources下添加Seata的配置文件 registry.conf
+```
+registry {
+  type = "nacos"
+  nacos {
+    serverAddr = "localhost"
+    namespace = "public"
+    cluster = "default"
+  }
+}
+config {
+  type = "nacos"
+  nacos {
+    serverAddr = "localhost"
+    namespace = "public"
+    cluster = "default"
+  }
+}
+```
+- 使用注解在微服务中进行全局事务开启`@GlobalTransactional`
+- Seata运行流程分析：
+![img.png](imgs/seata_data_flow.png)
 
 
 

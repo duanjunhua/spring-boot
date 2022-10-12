@@ -1,0 +1,12 @@
+# 配置文件优先级(由高到低):
+#   bootstrap.properties -> bootstrap.yml -> application.properties -> application.yml
+spring:
+  application:
+    name: nacos-config
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848 # Nacos中心地址
+        file-extension: yaml # 配置文件格式
+  profiles:
+    active: dev # 环境标识

@@ -16,6 +16,7 @@
         <module>shop-order</module>
         <module>api-gateway</module>
         <module>mq-service</module>
+        <module>nacos-config</module>
     </modules>
 
     <groupId>com.duanjh</groupId>
