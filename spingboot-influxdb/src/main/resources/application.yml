@@ -1,0 +1,8 @@
+spring:
+  influx:
+    url: http://localhost:8086
+    database: test
+    retentionPolicy: 90d
+
+thread:
+  maxConnection: 10

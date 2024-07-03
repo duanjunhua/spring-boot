@@ -1,0 +1,57 @@
+spring:
+    application:
+        name: springboot-module
+
+    # 数据库连接信息
+    datasource:
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/yhzs?defaultFetchSize=50&useCursorFetch=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false
+        username: root
+        password: root
+# API加解密配置信息
+rsa:
+    encrypt:
+        # 是否开启加密
+        open: true
+        # 是否打印加密日志
+        showLog: true
+        # RSA公钥，加密解密方需要
+        publicKey: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAJ2LFzxdvd6ga1B28iAXylkguRoH8s+Wc7Izkq/3W2eBS+4Fow93gUTK714ixAioZRXW4/XCGB/DqW17Af2BHkMCAwEAAQ=="
+        # RSA密钥，加密方需要
+        privateKey: "MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAnYsXPF293qBrUHbyIBfKWSC5Ggfyz5ZzsjOSr/dbZ4FL7gWjD3eBRMrvXiLECKhlFdbj9cIYH8OpbXsB/YEeQwIDAQABAkB0XzvosW4BNwpOQ66SmkA0GgHhAqIPSRlpNsNSDCuOhkDlYU0zC/q/cIF9NqkiLs9VA32/+pcmCnBJTZgOOExxAiEAzXYi7Tv/3Tfecp3WimajjffnGvWIh3+gIr+TYaXk2OcCIQDES48kxRZ/k2fdpygzSFplEBEWAooOLzJEjAIfmPsYRQIgdA8zk4a89Z1FjsESG4P3B47tgREJWmEBeB93hUVMjCkCIEPQWr54PEKMuThRFElLOLdraouxCuLFmVcnC2DBKBYFAiEArwuFIorfYaN4bfG2bIFK+haTzhaNl6F9qR2Zl9XuRsA="
+
+# 滑块验证
+aj:
+    captcha:
+        # 滑动拼图路径，以classpath:开头,取resource目录下路径，不配置将使用默认图片
+        jigsaw: classpath:images/captchas
+        # 滑动拼图路径，以classpath:开头,取resource目录下路径，不配置将使用默认图片
+        pic-click: classpath:images/pic-clicks
+        # 对于分布式部署的应用，我们建议应用自己实现CaptchaCacheService，比如用Redis或者memcache；如果应用是单点的，也没有使用redis，那默认使用内存
+        cache-type: local
+        # 证码类型：点选、拖动，默认两种都支持
+        type: default
+        # 右下角水印文字(我的水印)
+        water-mark: 个性化水印
+        # 校验滑动拼图允许误差偏移量(默认5像素)
+        slip-offset: 5
+        # aes加密坐标开启或者禁用(true|false)
+        aes-status: false
+        # 滑动干扰项(0/1/2)
+        interference-options: 2
+        # 点选字体样式 默认Font.BOLD
+        font-style: 1
+        # 点选字体字体大小
+        font-size: 25
+        # 历史数据是否清除
+        history-data-clear-enable: true
+        # 接口请求次数一分钟限制是否开启 true|false
+        req-frequency-limit-enable: true
+        # get接口一分钟内请求数限制
+        req-get-minute-limit: 10
+        # 1分钟内接口check允许失败次数
+        req-get-lock-limit: 5
+        # 验证失败后，锁定时间间隔（秒）
+        req-get-lock-seconds: 360
+        # check接口一分钟内请求数限制
+        req-check-minute-limit: 30
