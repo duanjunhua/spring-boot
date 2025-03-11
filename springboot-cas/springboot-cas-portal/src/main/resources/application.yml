@@ -1,0 +1,18 @@
+# 配置的域名主要是为了实现单点登录的效果
+server:
+    port: 12001
+cas:
+    # CAS 服务端地址
+    server-url-prefix: https://duanjh.com:8443/cas-server
+
+    # 客户端如果要登录，会跳转到CAS服务端的登录地址
+    server-login-url: ${server-url-prefix}/login
+
+    # CAS登出地址
+    server-logout-url: ${server-url-prefix}/logout
+
+    # 客户端在CAS服务端登录成功后，自动从CAS服务端跳转回客户端的地址
+    client-host-url: http://duanjh.com:12001
+
+    # Ticket校验器使用 Cas30ProxyReceivingTicketValidationFilter
+    validation-type: cas3
