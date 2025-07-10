@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: spring-oauth2
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/oauth2?defaultFetchSize=50&useCursorFetch=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
