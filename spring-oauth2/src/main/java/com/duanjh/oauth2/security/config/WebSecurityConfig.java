@@ -114,9 +114,7 @@ public class WebSecurityConfig  {
                     // 授权方式一：Web授权
                     if(CollectionUtils.isNotEmpty(permissions)){
                         // 权限
-                        permissions.stream().forEach(p -> {
-                            request.requestMatchers(p.getResource()).hasAuthority(p.getExpression());
-                        });
+                        permissions.forEach(v -> request.requestMatchers(v.getResource()).hasAuthority(v.getExpression()));
                     }
                     request.anyRequest().authenticated();
                 })
