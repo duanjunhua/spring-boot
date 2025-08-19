@@ -1,0 +1,26 @@
+server:
+  port: 8111
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      master:
+        driver-class-name: com.mysql.jdbc.Driver
+        username: root
+        password: root
+        url: jdbc:mysql://127.0.0.1:3306/demo?defaultFetchSize=50&useCursorFetch=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false
+      typt:
+        driver-class-name: com.mysql.jdbc.Driver
+        username: root
+        password: root
+        url: jdbc:mysql://127.0.0.1:3306/typt?defaultFetchSize=50&useCursorFetch=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false
+      yhzs:
+        driver-class-name: com.mysql.jdbc.Driver
+        username: root
+        password: root
+        url: jdbc:mysql://127.0.0.1:3306/yhzs?defaultFetchSize=50&useCursorFetch=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false
+  jackson:
+    serialization:
+      # format JSON output
+      indent-output: true
