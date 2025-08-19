@@ -1,8 +1,11 @@
 package com.duanjh.module.pic_handler;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 import java.io.File;
 import java.io.IOException;
 
@@ -106,5 +109,28 @@ public class PictureUtils {
         g2d.drawImage(imageSrc, 0, 0,newWidth, newHeight, null);
         g2d.dispose();
         return resizeImage;
+    }
+
+    /**
+     * 图片亮度调整
+     * @param image 原始图片
+     * @param contrast 对比度因子 (1.0为原始值)， 默认为2
+     * @param brightness 亮度偏移量 (0为原始值)， 默认为15
+     * @return
+     */
+    public static BufferedImage adjustBrightnessContrast(BufferedImage image, Float contrast, Float brightness) {
+
+        if(ObjectUtils.isEmpty(contrast)) contrast = 2f;
+
+        if(ObjectUtils.isEmpty(brightness)) brightness = 15f;
+
+        // 创建RescaleOp对象来调整亮度和对比度
+        RescaleOp rescaleOp = new RescaleOp(contrast, brightness, null);
+
+        // 应用变换
+        BufferedImage adjustedImage = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+        rescaleOp.filter(image, adjustedImage);
+
+        return adjustedImage;
     }
 }
