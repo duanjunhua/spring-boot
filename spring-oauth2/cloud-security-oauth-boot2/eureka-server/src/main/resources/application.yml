@@ -1,0 +1,14 @@
+server:
+  port: 8000
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # 禁用注册中心注册自己
+    register-with-eureka: false
+    # 禁用注册中心获取服务的注册列表
+    fetch-registry: false
+    # 注册中心地址，其他服务需要向当前地址注册
+    service-url:
+      defalutZone: http://localhost:8000/eureka/
