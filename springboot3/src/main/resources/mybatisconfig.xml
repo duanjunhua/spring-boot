@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!--mybatis 全局配置文件-->
+<configuration>
+    <settings>
+        <!--开启驼峰命名-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+
+    <!--进行别名命名，自定义类型别名 这样就不需要写全限定名-->
+    <typeAliases>
+        <typeAlias type="com.duanjh.mybatisplus.entity.MpUser" alias="MpUser"/>
+    </typeAliases>
+
+</configuration>
