@@ -17,8 +17,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class Springboot3Application extends SpringBootServletInitializer {  // Thymeleaf需要继承SpringBootServletInitializer添加 Servlet 的支持
 
     public static void main(String[] args) {
+        log.info("Application to be start");
         SpringApplication.run(Springboot3Application.class, args);
-        log.info("Application start");
+        log.info("Application started");
     }
 
     /**

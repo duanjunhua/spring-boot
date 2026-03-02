@@ -513,8 +513,28 @@
       @Column(updatable = false)  // 标注只在创建时设置
       private String createBy;
       ```
-12. 12
-13. 13
-14. 14
+12. 自定义动态Banner
+    - 在网站`http://www.network-science.de/ascii/` 将自己的文字转换成字符串，如：
+    - 在`resources`目录下新建banner.txt文件
+13. 项目启动时初始化资源`CommandLineRunner`
+    - `CommandLineRunner`接口的`Component`会在所有`Spring Beans`都初始化之后，SpringApplication.run()之前执行，适合在应用程序启动之初进行一些数据初始化
+14. 集成Memcached
+    - Memcached是一个高性能的分布式内存对象缓存系统，用于动态Web应用以减轻数据库负载
+    - Memcached基于一个存储键值对的hashmap
+    - `Spymemcached`是一个采用Java开发的异步、单线程的Memcached客户端，使用`NIO`实现
+    - 添加依赖
+    ```
+    <dependency>
+        <groupId>net.spy</groupId>
+        <artifactId>spymemcached</artifactId>
+        <version>2.12.2</version>
+    </dependency>
+    ```
+    - 配置memcached的ip地址与端口
+    ```
+    memcache.ip=127.0.0.1
+    memcache.port=11211
+    ```
+    - 设置配置对象
 15. 15
 
