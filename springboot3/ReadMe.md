@@ -475,6 +475,44 @@
            return resolver;
         }
         ```
+    - 开启JPA审计
+      - 开启JAP审计，启动类添加`@EnableJpaAuditing`
+      ```
+      // jpaUserAuditor为自定义配置的AuditorAware
+      @EnableJpaAuditing(auditorAwareRef = "jpaUserAuditor")  // 开启JPA审计，使得@CreateDate、@UpdateTimestamp生效，若要@CreateBy、@LastModifiedBy生效需实现AuditorAware并指定auditorAwareRef
+      @SpringBootApplication
+      // ...
+      ```
+      - 配置JPA中@CreateBy、@LastModifiedBy自动注入
+      ```
+      @Slf4j
+      @Component(value = "jpaUserAuditor")
+      public class JpaUserAuditor implements AuditorAware<String> {
+      
+          @Override
+          public Optional<String> getCurrentAuditor() {
+              //此处使用Shiro认证后获取到的用户
+              Subject subject = SecurityUtils.getSubject();
+              log.info("Current user: {}", subject.getPrincipal());
+              if(subject.isAuthenticated()) {
+                  SysUser user = (SysUser) subject.getPrincipal();
+                  return Optional.ofNullable(user.getUsername());
+              }
+              return Optional.of("system");
+          }
+      }
+      ```
+      - 实体类开启注册监听，实体类添加注解`@EntityListeners(AuditingEntityListener.class)`
+      - 实体类创建时的属性需加上只新增时创建的注解`@Column(updatable = false)`，否则更新时会被置空
+      ```
+      @CreationTimestamp
+      @Column(updatable = false)    // 标注只在创建时设置
+      private LocalDateTime createTime;
+  
+      @CreatedBy
+      @Column(updatable = false)  // 标注只在创建时设置
+      private String createBy;
+      ```
 12. 12
 13. 13
 14. 14

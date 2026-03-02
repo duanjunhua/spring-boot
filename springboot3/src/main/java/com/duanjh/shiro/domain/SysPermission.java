@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class SysPermission implements Serializable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;

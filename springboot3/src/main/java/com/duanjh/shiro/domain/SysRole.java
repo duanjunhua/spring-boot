@@ -26,7 +26,7 @@ import java.util.List;
 public class SysRole implements Serializable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
