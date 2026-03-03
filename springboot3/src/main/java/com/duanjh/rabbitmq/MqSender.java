@@ -1,8 +1,8 @@
 package com.duanjh.rabbitmq;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class MqSender {
 
     public static final String DEFAULT_TOPIC = "default";
     public static final String DEFAULT_EXCHANGE = "";
 
+    @Autowired
     AmqpTemplate template;
 
     public void defaultTopicSend(String message){

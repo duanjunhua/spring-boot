@@ -6,6 +6,9 @@
     <body class="layout-fixed">
         <h1>首页</h1>
         <br/>
+        <a th:href="@{/logout}">登出</a>
+        <br/>
+
         <a th:href="@{/sysUser/list}">用户列表</a>
         &nbsp;
         <a th:href="@{/sysUser/add}">用户新增</a>
@@ -13,6 +16,7 @@
         <a th:href="@{/thymeleaf/list}">Thymeleaf增删改查</a>
 
         &nbsp;
-        <a th:href="@{/logout}">登出</a>
+        <a th:href="@{/flux/stream}">流程输出</a>
+
     </body>
 </html>

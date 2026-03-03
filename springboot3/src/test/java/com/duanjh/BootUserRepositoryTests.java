@@ -2,7 +2,11 @@ package com.duanjh;
 
 import com.duanjh.jpa.entity.BootUser;
 import com.duanjh.jpa.repository.BootUserReposotory;
+import com.duanjh.shiro.config.PersonalRealm;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +26,29 @@ public class BootUserRepositoryTests {
     @Autowired
     BootUserReposotory repository;
 
+    @Autowired
+    PersonalRealm personalRealm;
+
+    /**
+     * 当启用JPA的@CreatedBy等后需要初始化
+     */
+    @Before
+    public void initSecurity(){
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        securityManager.setRealm(personalRealm);
+        // 将 securityManager 放到 SecurityUtils 中
+        SecurityUtils.setSecurityManager(securityManager);
+    }
+
     @Test
     public void testRepository(){
-        repository.save(new BootUser("duanjh", "Duanjh@123", "duanjh@qq.com"));
-        repository.save(new BootUser("lucy", "lucy@123", "lucy@qq.com"));
-        repository.save(new BootUser("kay", "Kay@123", "kay@qq.com"));
+        long countExist = repository.count();
+        repository.save(new BootUser("test001", "test001@123", "test001@qq.com"));
+        repository.save(new BootUser("test002", "test002@123", "test002@qq.com"));
+        repository.save(new BootUser("test003", "test003@123", "test003@qq.com"));
 
-        Assert.assertEquals(3, repository.count());
-        Assert.assertEquals("lucy@qq.com", repository.findByUsername("lucy").getEmail());
-        repository.delete(repository.findByUsername("kay"));
+        Assert.assertEquals(3 + countExist, repository.count());
+        Assert.assertEquals("test002@qq.com", repository.findByUsername("test002").getEmail());
+        repository.deleteByUsername("test");
     }
 }

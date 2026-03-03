@@ -25,6 +25,8 @@ import java.util.List;
 @AllArgsConstructor
 public class SysRole implements Serializable {
 
+    private static final long serialVersionUID = -5790674764224598449L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 @Entity(name = "sys_user_role")
 public class SysUserRole implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

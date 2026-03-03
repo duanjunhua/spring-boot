@@ -28,11 +28,12 @@ public class MybatisMapperTests {
 
     @Test
     public void insertTest(){
+        int exists = userMapper.getList().size();
         userMapper.insert(new MpUser("zhangsan", "Zhangs@123", "zs@qq.com"));
         userMapper.insert(new MpUser("michale", "Michale@123", "Michale@qq.com"));
         userMapper.insert(new MpUser("wangwu", "Wangw@123", "ww@qq.com"));
 
-        Assert.assertEquals(3, userMapper.getList().size());
+        Assert.assertEquals(3 + exists, userMapper.getList().size());
     }
 
     @Test

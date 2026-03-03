@@ -25,6 +25,8 @@ import java.util.List;
 @AllArgsConstructor
 public class SysUser implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -68,4 +70,10 @@ public class SysUser implements Serializable {
         return this.username + this.salt;
     }
 
+    public SysUser(Long id, String nickName, String username, String password) {
+        this.id = id;
+        this.nickName = nickName;
+        this.username = username;
+        this.password = password;
+    }
 }

@@ -535,6 +535,59 @@
     memcache.ip=127.0.0.1
     memcache.port=11211
     ```
-    - 设置配置对象
-15. 15
+    - 设置配置对象并注册
+    ```
+    // 设置资源
+    @Data
+    @Component
+    @ConfigurationProperties(prefix = "memcached")
+    public class MemcacheSource {
+    
+        private String host;
+    
+        private int port;
+    }    
+    
+    
+    // 注册
+    @Slf4j
+    @Getter
+    @Component
+    public class MemcachedRunner implements CommandLineRunner {
+    
+        @Resource
+        MemcacheSource source;
+    
+        MemcachedClient client = null;
+    
+        @Override
+        public void run(String... args) throws Exception {
+    
+            try {
+                log.info("初始化Memcached客户端");
+                client = new MemcachedClient(new InetSocketAddress(source.getHost(), source.getPort()));
+            }catch (Exception e){
+                log.error("初始化MemcachedClient失败，失败信息{}", e.getLocalizedMessage());
+            }
+        }
+    }
+    ```
+15. 响应式编程集成WebFlux
+    - `Spring 5.0`及以上提供了`Webflux`组件
+    - 响应式编程是一种面向数据流和变化传播的编程范式，计算模型会自动将变化的值通过数据流进行传播
+    - 响应式编程是基于异步和事件驱动的非阻塞程序，只需要在程序内启动少量线程扩展
+    - Webflux依赖`Reactor`而构建。Reactor是一个基于JVM之上的异步应用基础库，Reactor中有两个非常重要的概念Flux和Mono
+      - Flux表示的是包含**0到N个**元素的异步序列。序列中可以包含三种不同类型的消息通知：正常的包含元素的消息、序列结束的消息和序列出错的消息，当消息通知产生时，订阅者中对应的方法`onNext()、onComplete()、onError()`会被调用
+      - Mono表示的是包含**0或者1个**元素的异步序列。Flux和Mono之间可以进行转换
+    - 服务器端WebFlux支持2种不同的编程模型
+      - 基于注解的@Controller和其他注解也支持Spring MVC
+      - Functional 、Java8 lambda风格的路由和处理
+    - WebFlux模块从上到下依次是`Router Functions、WebFlux、Reactive Streams`三个新组件
+      - `Router Functions`：对标准的`@Controller、@RequestMapping`等的Spring MVC注解，提供一套函数式风格的API，用于创建Router、Handler和Filter
+      - `WebFlux`：核心组件，协调上下游各个组件提供响应式编程 支持
+      - `Reactive Streams`：一种支持背压 (Backpressure)的异步数据流处理标准，主流实现有`RxJava、Reactor`，Spring WebFlux集成的是Reactor
+    - **注意**：支持reactive编程的数据库只有MongoDB、redis、Cassandra、Couchbase
+    - 一般来说，Spring MVC用于同步处理，Spring Webflux用于异步处理
+    - 
+16. 16
 
