@@ -1,7 +1,11 @@
 package com.duanjh;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.duanjh.mybatisplus.entity.MpUser;
 import com.duanjh.mybatisplus.mapper.MpUserMapper;
+import com.duanjh.shiro.domain.SysUser;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,5 +48,24 @@ public class MybatisMapperTests {
         MpUser zhangsan = userMapper.findMpUserByUsername("zhangsan");
         System.out.println(zhangsan.getEmail());
         Assert.assertEquals("zs@qq.com", zhangsan.getEmail());
+    }
+
+    @Test
+    public void pageTest(){
+        System.out.println("MP自带分页查询");
+        userMapper.insert(new MpUser("zhangsan", "Zhangs@123", "zs@qq.com"));
+        userMapper.insert(new MpUser("michale", "Michale@123", "Michale@qq.com"));
+        userMapper.insert(new MpUser("wangwu", "Wangw@123", "ww@qq.com"));
+
+        IPage<MpUser> page = new Page<>(1, 2);
+
+        QueryWrapper<MpUser> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like("email", "%qq.com");
+        IPage userPage = userMapper.selectPage(page, queryWrapper);
+
+        System.out.println("总条数：" + userPage.getTotal());
+        System.out.println("当前页：" + userPage.getCurrent());
+        System.out.println("每页显示数：" + userPage.getSize());
+
     }
 }

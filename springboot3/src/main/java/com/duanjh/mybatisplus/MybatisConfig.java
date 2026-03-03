@@ -2,6 +2,7 @@ package com.duanjh.mybatisplus;
 
 import com.baomidou.mybatisplus.autoconfigure.ConfigurationCustomizer;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,5 +28,13 @@ public class MybatisConfig {
                 configuration.setCacheEnabled(true);
             }
         };
+    }
+
+    /**
+     * 分页插件
+     */
+    @Bean
+    public PaginationInnerInterceptor paginationInterceptor() {
+        return new PaginationInnerInterceptor();
     }
 }
