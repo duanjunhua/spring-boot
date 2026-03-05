@@ -1,5 +1,6 @@
 package com.duanjh;
 
+import com.duanjh.event.BaseApplicationEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -18,7 +19,15 @@ public class Springboot3Application extends SpringBootServletInitializer {  // T
 
     public static void main(String[] args) {
         log.info("Application to be start");
-        SpringApplication.run(Springboot3Application.class, args);
+
+        SpringApplication application = new SpringApplication(Springboot3Application.class);
+
+        // 注册事件
+        application.addListeners(new BaseApplicationEventListener());
+
+        // 启动
+        application.run(args);
+
         log.info("Application started");
     }
 

@@ -588,6 +588,66 @@
       - `Reactive Streams`：一种支持背压 (Backpressure)的异步数据流处理标准，主流实现有`RxJava、Reactor`，Spring WebFlux集成的是Reactor
     - **注意**：支持reactive编程的数据库只有MongoDB、redis、Cassandra、Couchbase
     - 一般来说，Spring MVC用于同步处理，Spring Webflux用于异步处理
-    - 
-16. 16
+16. 事件与监听
+    - 自定义事件实现`ApplicationEvent`
+    - 事件发布
+    ```
+    @Slf4j
+    @Service
+    public class PublishPersonalEvent implements ApplicationEventPublisherAware {
+    
+        private List<String> personalEvents;
+    
+        private ApplicationEventPublisher publisher;
+    
+        public void setPersonalEvents(List<String> personalEvents) {
+            this.personalEvents = personalEvents;
+        }
+    
+        @Override
+        public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+            this.publisher = applicationEventPublisher;
+        }
+    
+        public void sendPersonalEvent(String address, String content){
+            log.info("-----------发布事件-------------");
+            publisher.publishEvent(new PersonalEvent(this, address, content));
+        }
+    }
+    ```
+    - 事件监听
+    ```
+    // 方式一：实现
+    @Slf4j
+    @Data
+    @Component
+    public class BaseApplicationEventListener implements ApplicationListener<PersonalEvent> {
+    
+        private String notificationAddress;
+    
+        @Override
+        public void onApplicationEvent(PersonalEvent event) {
+            log.info("---------------ApplicationListener监听-------");
+        }
+    }
+    
+    // 方式二：注解 
+    @Slf4j
+    @Data
+    @Component
+    public class BaseAnnotationEventListener {
+    
+        private String notificationAddress;
+    
+        /**
+         * 异步事件监听器方法不能通过返回值来发布后续事件，多个监听器可以添加@Order(num)注解来设置监听器顺序
+         */
+        @Async  // 开启异步监听
+        @EventListener
+        public void onApplicationEvent(PersonalEvent event) {
+            log.info("---------------【BaseAnnotationEventListener】监听-------");
+        }
+    }
+    ```
+17. 
 
