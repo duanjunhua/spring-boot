@@ -649,5 +649,203 @@
         }
     }
     ```
-17. 
+17. 配置与配置源
+    - 外部化配置
+      - SpringBoot使用了一个非常特殊的PropertySource顺序，其目的是允许合理地重写值，属性优先级如下（排序后的覆盖排序前的）
+        - 默认配置：(SpringApplication.setDefaultProperties设置的属性)
+        - @PropertySource注解配置在@Configuration类上
+        - 配置数据：如application.properties配置文件
+        - RandomValuePropertySource，它的属性只有random.*
+        - 操作系统环境变量
+        - Java系统属性：`System.getProperties()`
+        - 来自`java:comp/env`的`JNDI`属性
+        - ServletContext初始化参数
+        - ServletConfig初始化参数
+        - SPRING_APPLICATION_JSON属性
+        - 命令行参数
+      - 配置文件优先级顺序:
+        - 打包在jar中的应用配置`application.properties`和`application.yml`
+        - 打包在jar中的特定应用配置`application-{profile}.properties`和`application-{profile}.yml`
+        - 打包的jar之外的应用配置`application.properties`和`application.yml`
+        - 打包在jar之外的特定应用配置`application-{profile}.properties`和`application-{profile}.yml`
+        - 如果配置文件的位置同时包含`properties`和`yml`格式，则`properties`**优先**
+18. Logback日志配置
+    - 默认当日志文件达到10M时会归档，重新输出到新文件中
+    - `logging.file.name`：写入指定的日志文件。名称可以是确切的位置或相对于当前目录
+    - `logging.file.path`：写入指定目录。名称可以是确切的位置或相对于当前目录
+    - `logging.logback.rollingpolicy.file-name-pattern`：用于创建日志归档的文件名方式
+    - `logging.logback.rollingpolicy.clean-history-on-start`：是否应该在应用程序启动时进行日志归档清理。
+    - `logging.logback.rollingpolicy.max-file-size`：归档前日志文件的最大大小(默认10m)
+    - `logging.logback.rollingpolicy.total-size-cap`：在删除日志文件之前，日志文件的最大容量(默认0)
+    - `logging.logback.rollingpolicy.max-history`：保留的归档日志文件的最大数量(默认为7)
+19. JSON
+    - 提供三个JSON映射集成：`Gson`、`Jackson`（默认）、`JSON-B`
+    - SpringBoot自带的JSON格式转换，`HttpMessageConverter`实现有如下几种：
+      - `MappingJackson2HttpMessageConverter`（默认）
+      - `JsonbHttpMessageConverter`
+      - `GsonHttpMessageConverter`
+      - 具体转换方式配置：`spring.http.converters.preferred-json-mapper=jackson`
+    - jackson常用配置属性：
+      ```
+      # 属性命名策略，PropertyNamingStrategy常量，SNAKE_CASE驼峰转下划线
+      spring.jackson.property-naming-strategy=SNAKE_CASE
+      # @JsonFormat的格式转换
+      spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
+      #设置全局时区
+      spring.jackson.time-zone=GMT+8
+      #属性null值处理方式，非空才序列化
+      spring.jackson.default-property-inclusion=non_null
+      #枚举类SerializationFeature
+      #Date转换成timestamp
+      spring.jackson.serialization.write-dates-as-timestamps=true
+      #对象为null报错
+      spring.jackson.serialization.fail-on-empty-beans=true
+      #枚举类DeserializationFeature
+      #反序列化不存在属性时是否报错，默认true
+      spring.jackson.deserialization.fail-on-unknown-properties=false
+      #使用getter取代setter探测属性，如类中含getName()但不包含name属性与setName()，json输出包含name。默认false
+      spring.jackson.mapper.use-getters-as-setters=true
+      #枚举类JsonParser.Feature
+      #是否允许出现单引号，默认false
+      spring.jackson.parser.allow-single-quotes=true
+      ```
+    - Gson使用
+      - 需要排除默认的jackson以及引入Gson依赖
+        ```
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-json</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        ```
+      - 常用配置
+      ```
+      # 序列化Date对象时使用的格式。
+      spring.gson.date-format=yyyy-MM-dd HH:mm:ss
+      #是否禁用HTML字符转义，如'<'，'>'等。
+      spring.gson.disable-html-escaping=true
+      #是否在序列化过程中排除内部类。
+      spring.gson.disable-inner-class-serialization=false
+      #是否启用复杂映射键(即非原语)的序列化
+      spring.gson.enable-complex-map-key-serialization=false
+      #在序列化或反序列化时，是否排除所有没有\"Expose\"注释的字段
+      spring.gson.exclude-fields-without-expose-annotation=true
+      #在序列化和反序列化期间应用于对象字段的命名策略 FieldNamingPolicy
+      spring.gson.field-naming-policy=UPPER_CAMEL_CASE
+      #是否通过在输出前加上一些特殊文本来生成不可执行的JSON。
+      spring.gson.generate-non-executable-json=false
+      #是否对不符合RFC 4627的JSON进行宽容的解析。
+      spring.gson.lenient=false
+      # Long类型和long类型的序列化策略。LongSerializationPolicy
+      spring.gson.long-serialization-policy=DEFAULT
+      # 是否输出适合页面的序列化JSON以进行漂亮的打印。
+      spring.gson.pretty-printing=true
+      # 是否序列化空字段。
+      spring.gson.serialize-nulls=true
+      ```
+    - 使用外部Fastjson需要创建`FastJsonHttpMessageConverter`，覆盖默认的`HttpMessageConverter`
+    ```
+    方式一：
+    @Configuration
+    public class FastJsonGlobalConfig {
+        @Bean
+        FastJsonHttpMessageConverter getconvers(){
+            FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
+            FastJsonConfig jsonConfig = new FastJsonConfig();
+            jsonConfig.setCharset(Charset.forName("UTF-8"));
+            jsonConfig.setDateFormat("yyyy-MM-dd HH:mm:ss");
+            converter.setFastJsonConfig(jsonConfig);
+            converter.setDefaultCharset(Charset.forName("Utf-8"));
+            return converter;
+        }
+    }
+
+    方式二：
+    @Configuration
+    public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
+        @Override
+        public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+            FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
+            FastJsonConfig jsonConfig = new FastJsonConfig();
+            jsonConfig.setCharset(Charset.forName("UTF-8"));
+            jsonConfig.setDateFormat("yyyy-MM-dd HH:mm:ss");
+            converter.setFastJsonConfig(jsonConfig);
+            converter.setDefaultCharset(Charset.forName("Utf-8"));
+            converters.add(0, converter);
+        }
+    }
+    ```
+20. Servlet Web应用
+    - 提供一种轻量级函数式编程模型，其中函数用于路由和处理请求。它是基于注解的编程模型的替代方案
+      - 可以定义任意数量的RouterFunction bean来模块化路由器的定义。如果需要应用优先级，可以对bean进行排序
+    ```
+    // 第一步：创建处理器
+    @Slf4j
+    @Component
+    public class BootUserWebMvcHandler {
+    
+        @Autowired
+        BootUserReposotory reposotory;
+    
+        public ServerResponse listUsers(ServerRequest request) {
+            log.info("listUsers");
+            List<BootUser> list = reposotory.findAll();
+            return ServerResponse.ok().body(list);
+        }
+    
+        public ServerResponse findUser(ServerRequest request) {
+            String username = request.pathVariable("username");
+            log.info("findUser，username: {}", username);
+            if(StringUtils.hasText(username)) {
+                BootUser user = reposotory.findByUsername(username);
+                return ServerResponse.ok().body(user);
+            }
+            return ServerResponse.ok().build();
+        }
+    }
+    
+    // 第二步，构建Route
+    @Slf4j
+    @Configuration(proxyBeanMethods = false)
+    public class RoutingConfiguration {
+    
+        private static final RequestPredicate ACCEPT_JSON = accept(MediaType.APPLICATION_JSON);
+    
+        @Bean
+        public RouterFunction<ServerResponse> routerFunction(BootUserWebMvcHandler handler) {
+            return route()
+                    .GET("/route/list", ACCEPT_JSON, handler::listUsers)
+                    .GET("/route/find/{username}", ACCEPT_JSON, handler::findUser)
+                    .build();
+        }
+    }
+    ```
+    - Spring MVC支持各种模板技术，包括Thymeleaf、FreeMarker和jsp
+    - 跨域
+      - 从4.2版开始，Spring MVC支持CORS
+      - 全局CORS配置可以通过使用自定义的addCorsMappings (CorsRegistry)方法注册WebMvcConfigurer bean来定义
+      ```
+      @Configuration(proxyBeanMethods = false)
+      public class MyCorsConfiguration {
+          @Bean
+          public WebMvcConfigurer corsConfigurer() {
+              return new WebMvcConfigurer() {
+                  @Override
+                  public void addCorsMappings(CorsRegistry registry) {
+                      registry.addMapping("/api/**");
+                  }
+              };
+          }
+      }
+      ```
+21. 21
 
