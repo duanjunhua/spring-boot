@@ -847,5 +847,30 @@
           }
       }
       ```
-21. 21
+    - 当使用嵌入式容器时，通过使用@ServletComponentScan来启用带有@WebServlet、@WebFilter和@WebListener注释的类的自动注册
+    - 常用的服务器设置：
+      - 监听端口(server.port)与绑定地址(server.address)
+      - Session设置：
+        - 会话是否持久(server.servlet.session.persistent)
+        - session超时(server.servlet.session.timeout)
+        - 会话数据存储位置（server.servlet.session.store-dir）
+        - session-cookie配置（server.servlet.session.cookie.*）
+      - 错误页面的路径(server.error.path)
+    - Undertow不支持jsp
+21. 数据链接
+    - HikariCP
+        - HikariCP是一个“零开销”的生产JDBC连接池。快速、简单、可靠
+        - HikariCP包含许多单独的微优化
+        - FastList替代ArrayList
+          - 避免ArrayList<Statement>每次get()调用都要进行范围检查
+          - 避免ArrayList调用remove(Object)时的从头到尾的扫描，支持快速插入和删除
+          - CPU的时间片算法进行优化
+    - Druid
+      - 是Java语言中最好的数据库连接池。Druid能够提供强大的监控和扩展功能
+      - Druid集成
+        - 引入依赖`druid-spring-boot-starter`
+        - 属性配置`spring.datasource.druid.*`（`name、url、username、password、driverClassName、initialSize、maxActive、keepAlive、...`）
+    - Spring的JdbcTemplate和NamedParameterJdbcTemplate类在Spring Boot中自动配置，可直接注入使用
+22. 
+23. 23
 
