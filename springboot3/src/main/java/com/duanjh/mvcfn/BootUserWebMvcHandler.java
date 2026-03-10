@@ -1,7 +1,7 @@
 package com.duanjh.mvcfn;
 
 import com.duanjh.jpa.entity.BootUser;
-import com.duanjh.jpa.repository.BootUserReposotory;
+import com.duanjh.jpa.repository.BootUserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ import java.util.List;
 public class BootUserWebMvcHandler {
 
     @Autowired
-    BootUserReposotory reposotory;
+    BootUserRepository reposotory;
 
     public ServerResponse listUsers(ServerRequest request) {
         log.info("listUsers");

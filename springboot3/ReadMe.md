@@ -1,6 +1,71 @@
 ### SpringBoot3.x
 1. 集成Web
 2. 集成JPA持久化
+    - 相关注解
+      - `@Entity`：注解在类上，表示为JPA实体类，对应数据库表映射的对象
+        - name:(可选)实体名称。默认为实体类的非限定名称。此名称用于引用查询中的实体
+      - `@Table`：当实体类与其映射的数据库表名不同名时需要使用 @Table
+        - name:(可选)表名，默认为实体名称
+        - schema:(可选)表的schema，默认为用户的默认schema
+      - `@Column`：指定持久化属性字段到数据库列的映射。属性和数据库字段一致可不指定
+        - name：数据库列名称，默认持久化类属性字段名称
+        - unique：(可选)列是否为唯一键
+        - nullable: (可选)数据库列是否能为null,默认true
+        - insertable: (可选)SQL INSERT是否包含该列,默认true
+        - updatable: (可选)SQL UPDATE是否包含该列,默认true
+        - table：(可选)表示当映射多个表时，指定表的表中的字段。默认值为主表的表名
+        - length: (可选)列长度(仅当 使用字符串值列),默认255
+        - precision：decimal字段长度, 默认0
+        - scale：decimal字段,         小数点位数,默认0
+      - `@Id`：指定实体主键，可以是任何Java基本类型
+      - `@GeneratedValue`：提供主键值的生成策略的说明。主键生成策略`strategy`，默认`GenerationType.AUTO`，支持以下策略
+          - `GenerationType.TABLE`：通过数据库表生成主键
+          - `GenerationType.SEQUENCE`：使用数据库序列为实体分配主键
+          - `GenerationType.IDENTITY`：使用数据库ID自增长为实体分配主键
+          - `GenerationType.AUTO`：JPA为特定数据库选择适当的策略(默认)
+      - `@Transient`：指定属性或字段不是持久的
+      - `@Enumerated`：指定持久属性或字段作为枚举类型持久保存。若未指定@Enumerated注解，则EnumType值为ORDINAL，映射时的序号是从0开始的
+      - `@MappedSuperclass`：指定一个类，该类的映射信息应用于从其继承的实体。用MappedSuperclass注解指定的类可以以与实体相同的方式进行映射，只是映射将只应用于它的子类
+      - `@Embeddable`：指定一个类，其实例存储为所属实体的内在部分，并共享该实体的标识。嵌入对象的每个持久属性或字段都映射到实体的数据库表
+      - 以及其他`@OneToOne`、`OneToMany`等
+    - 持久化层
+      - `PagingAndSortingRepository`: 继承Repository，实现了分页排序相关的方法
+      ```
+      @NoRepositoryBean
+      public interface PagingAndSortingRepository<T, ID> extends Repository<T, ID> {
+        Iterable<T> findAll(Sort sort);
+        Page<T> findAll(Pageable pageable);
+      }
+      ```
+      - `QueryByExampleExecutor`: 不属于Repository体系,接口允许通过实例Example执行动态查询
+      ```
+      public interface QueryByExampleExecutor<T> {
+        <S extends T> Optional<S> findOne(Example<S> example);
+        <S extends T> Iterable<S> findAll(Example<S> example);
+        <S extends T> Iterable<S> findAll(Example<S> example, Sort sort);
+        <S extends T> Page<S> findAll(Example<S> example, Pageable pageable);
+        <S extends T> long count(Example<S> example);
+        <S extends T> boolean exists(Example<S> example);
+        <S extends T, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction);
+      }
+      ```
+      - `JpaSpecificationExecutor`:不属于Repository体系，实现一组JPA Criteria查询相关的方法
+      ```
+      public interface JpaSpecificationExecutor<T> {
+        Optional<T> findOne(@Nullable Specification<T> spec);
+        List<T> findAll(@Nullable Specification<T> spec);
+        Page<T> findAll(@Nullable Specification<T> spec, Pageable pageable);
+        List<T> findAll(@Nullable Specification<T> spec, Sort sort);
+        long count(@Nullable Specification<T> spec);
+        boolean exists(Specification<T> spec);
+      }
+      ```
+      - `SimpleJpaRepository`：CrudRepository默认实现
+    - 事务
+      - 默认情况下，从SimpleJpaRepository继承的存储库实例上的CRUD方法是事务性的。对于读操作，事务配置readOnly标志设置为true，其他默认配置普通的@Transactional
+    - 命名策略
+      - 物理策略（`spring.jpa.hibernate.naming.physical-strategy`）和隐式策略（`spring.jpa.hibernate.naming.implicit-strategy`）
+      - 默认Spring Boot使用CamelCaseToUnderscoresNamingStrategy配置物理命名策略，使用这种策略，所有的点都被下划线取代，驼峰大小写也被下划线取代。默认所有表名都是小写的
 3. 集成Redis
 4. 集成Thymeleaf
     ```
@@ -857,7 +922,7 @@
         - session-cookie配置（server.servlet.session.cookie.*）
       - 错误页面的路径(server.error.path)
     - Undertow不支持jsp
-21. 数据链接
+21. 数据连接
     - HikariCP
         - HikariCP是一个“零开销”的生产JDBC连接池。快速、简单、可靠
         - HikariCP包含许多单独的微优化

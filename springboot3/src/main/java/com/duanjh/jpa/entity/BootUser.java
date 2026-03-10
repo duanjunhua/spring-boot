@@ -20,7 +20,8 @@ import java.time.LocalDateTime;
  * @Description:
  */
 @Data
-@Entity(name = "t_boot_user")
+@Entity     // name属性是实体名称，默认为实体类的非限定名称，用于引用查询中的实体
+@Table(name = "t_boot_user")    // name：表名，默认为实体名称， schema：表的schema,默认为用户的默认schema
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)      // 注册实体监听器，用于自动填充审计字段
