@@ -66,6 +66,126 @@
     - 命名策略
       - 物理策略（`spring.jpa.hibernate.naming.physical-strategy`）和隐式策略（`spring.jpa.hibernate.naming.implicit-strategy`）
       - 默认Spring Boot使用CamelCaseToUnderscoresNamingStrategy配置物理命名策略，使用这种策略，所有的点都被下划线取代，驼峰大小写也被下划线取代。默认所有表名都是小写的
+    - 动态数据源
+      - `AbstractRoutingDataSource`：抽象DataSource实现，基于查找键(determineCurrentLookupKey())将getConnection()调用路由到目标数据源之一
+      - 如查询走从库，增删改走主库
+        - 定义数据源类型
+        ```
+        public class DsType {
+
+           // 如：primary为主库、secondary为从库
+           public final static String PRIMARY = "primary";
+           public final static String SECONDARY = "secondary";
+        
+        }
+        ```
+        - 自定义动态数据源
+        ```
+        public class DynamicDs extends AbstractRoutingDataSource {
+
+            /**
+             * ThreadLocal 用于提供线程局部变量，在多线程环境可以保证各个线程里的变量独立于其它线程里的变量。
+             */
+            private static final ThreadLocal<String> DS_HOLDER = new ThreadLocal<>();
+        
+            public DynamicDs(DataSource defaultDs, Map<Object, Object> targetDs) {
+              //默认目标数据源
+              super.setDefaultTargetDataSource(defaultDs);
+              //目标数据源集合。数据源切换时从此列表选择
+              super.setTargetDataSources(targetDs);
+              //属性设置
+              super.afterPropertiesSet();
+           }
+        
+           @Override
+           protected Object determineCurrentLookupKey() {
+              // 更具数据源key。获取选择的数据源。
+              return getDataSource();
+           }
+        
+           public static void setDataSource(String dataSource) {
+              DS_HOLDER.set(dataSource);
+           }
+        
+           public static String getDataSource() {
+              return DS_HOLDER.get();
+           }
+        
+           public static void clearDataSource() {
+              DS_HOLDER.remove();
+           }
+        }
+        ```
+        - 数据源注入
+        ```
+        @Configuration
+        public class DynamicDsConfig {
+        
+            //创建第一个主库数据源
+            @Bean(name = "primaryDynamicDs")
+            @ConfigurationProperties(prefix = "app.dynamicds.primary")
+            public DataSource primaryDynamicDs() {
+                return DataSourceBuilder.create().build();
+            }
+        
+            //创建第二个从库数据源
+            @Bean(name = "secondaryDynamicDs")
+            @ConfigurationProperties(prefix = "app.dynamicds.second")
+            public DataSource secondaryDynamicDs() {
+                return DataSourceBuilder.create().build();
+            }
+        
+            @Bean(name = "dynamicDs")   //动态数据源，实际使用的数据源时数据源路由根据key 选择的。默认数据源为第一个数据源(主库)
+            @Primary    // 指定主数据源，使用的是此数据源
+            public DynamicDs dataSource(DataSource primaryDynamicDs, DataSource secondaryDynamicDs) {
+                Map<Object, Object> targetDataSources = new HashMap<>(2);
+                targetDataSources.put(DsType.PRIMARY, primaryDynamicDs);
+                targetDataSources.put(DsType.SECONDARY, secondaryDynamicDs);
+                //默认返回的也是一个datasource
+                return new DynamicDs(primaryDynamicDs, targetDataSources);
+            }
+        }        
+        ```
+        - 定义切面自动选择数据源
+        ```
+        @Slf4j
+        @Aspect
+        @Component
+        public class DynamicDsAspect {
+        
+            @Autowired
+            private DynamicDs dynamicDs;
+        
+            /**
+             * 定义切面
+             */
+            @Pointcut("execution(* org.springframework.data.repository.CrudRepository.*(..))||execution(* com.duanjh.dynamicds.repository.*.*(..))")
+            private void aspect(){
+        
+            }
+        
+            /**
+             * 打印数据源引入
+             */
+            @Around("aspect()")
+            public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+                String method = joinPoint.getSignature().getName();
+                if (method.startsWith("find") || method.startsWith("select") || method.startsWith("query") || method.startsWith("search")) {
+                    DynamicDs.setDataSource(DsType.SECONDARY);
+                } else {
+                    DynamicDs.setDataSource(DsType.PRIMARY);
+                    log.info("Switch to Primary datasource...");
+                }
+                log.info("aop当前使用的数据源是:{}", dynamicDs.getConnection().getCatalog());
+                try {
+                    return joinPoint.proceed();
+                } finally {
+                    log.info("清除 datasource router...");
+                    dynamicDs.clearDataSource();
+                }
+            }
+        }      
+        ```
 3. 集成Redis
 4. 集成Thymeleaf
     ```
@@ -936,6 +1056,24 @@
         - 引入依赖`druid-spring-boot-starter`
         - 属性配置`spring.datasource.druid.*`（`name、url、username、password、driverClassName、initialSize、maxActive、keepAlive、...`）
     - Spring的JdbcTemplate和NamedParameterJdbcTemplate类在Spring Boot中自动配置，可直接注入使用
-22. 
+22. REST
+    - 主流的三种Web服务交互方案
+      - REST（Representational State Transfer）
+      - SOAP（Simple Object Access protocol）
+      - XML-RPC
+    - 常见状态码
+      - 2xx
+        - 200：OK，服务器成功返回请求的数据，该操作是幂等的（Idempotent）
+        - 201：CREATED，新建或修改数据成功
+        - 202：Accepted，表示一个请求已经进入后台排队（异步任务）
+        - 204：NO CONTENT，删除数据成功
+      - 4xx
+        - 400：INVALID REQUEST，发出的请求有错误，服务器没有进行新建或修改数据的操作，该操作是幂等的。
+        - 401：Unauthorized，表示没有权限（令牌、用户名、密码错误）
+        - 403：Forbidden，表示得到授权（与401错误相对），但是访问是被禁止的
+        - 404：NOT FOUND，用户发出的请求针对的是不存在的记录，服务器没有进行操作，该操作是幂等的
+        - 406：Not Acceptable，用户请求的格式不可得（如请求JSON格式，但是只有XML格式）
+        - 410：Gone，请求的资源被永久删除，且不会再得到的
+      - 500： INTERNAL SERVER ERROR，服务器发生错误，用户将无法判断发出的请求是否成功
 23. 23
 

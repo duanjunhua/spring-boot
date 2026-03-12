@@ -23,14 +23,14 @@ public class DSConfig {
     @Primary
     @Bean(name = "primaryDs")
     @ConfigurationProperties(prefix = "app.datasource.primary") // 对应配置文件app.datasource.primary.*
-    public DataSource userDataSource() {
+    public DataSource primaryDataSource() {
         return DataSourceBuilder.create().build();
     }
 
 
     @Bean(name = "secondaryDs")
     @ConfigurationProperties(prefix = "app.datasource.secondary")   // 对应配置文件app.datasource.secondary.*
-    public DataSource secondDataSource() {
+    public DataSource secondaryDataSource() {
         return DataSourceBuilder.create().build();
     }
 
