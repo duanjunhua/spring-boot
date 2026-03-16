@@ -332,6 +332,14 @@
 5. 集成 MybatisPlus
    - MybatisPlus 基于 mybatis开发，主要用于增强mybatis
    - springboot启动时将会加载MybatisPlusAutoConfiguration类
+   - 常用注解
+     - `@TableName`：标注实体对应的表
+     - `@TableId`：字段注解（用于主键）
+     - `@TableField`：字段注解（用于非主键）
+     - `@Version`：乐观锁注解
+     - `@EnumValue`：普通枚举类注解(注解在枚举字段上)
+     - `@TableLogic`：表字段逻辑处理注解（逻辑删除）
+     - `@OrderBy`：内置SQL默认指定排序，优先级低于wrapper条件查询
 6. 集成消息队列RabbitMQ
    - RabbitMQ即一个消息队列，主要是用来实现应用程序的异步和解耦，同时也能起到消息缓冲，消息分发的作用
    - RabbitMQ高可用、高性能、灵活
@@ -1150,5 +1158,5 @@
           }
       }      
       ```
-24. 24
+24. 
 
