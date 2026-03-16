@@ -1075,5 +1075,80 @@
         - 406：Not Acceptable，用户请求的格式不可得（如请求JSON格式，但是只有XML格式）
         - 410：Gone，请求的资源被永久删除，且不会再得到的
       - 500： INTERNAL SERVER ERROR，服务器发生错误，用户将无法判断发出的请求是否成功
-23. 23
+23. 集成SpringDoc
+    - springdoc-openapi帮助使用SpringBoot项目自动化API文档的生成。自动生成JSON/YAML和HTML格式的API文档，文档可以通过使用swagger-api注解来完成
+    - SpringBoot3使用的是JakartaEE9，对应的springdoc版本需要升级到v2，v2支持以下内容
+      - OpenAPI3（Swagger3是基于OpenAPI3的，Swagger2予2017年停止维护）
+      - Spring-boot v3 (Java 17 & Jakarta EE 9)
+      - JSR-303 特别注解 @NotNull, @Min, @Max, 和 @Size
+      - Swagger-ui
+      - OAuth2
+      - GraalVM native images
+    - 引入依赖
+    ```
+    <!-- WebMvc支持 -->
+    <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>2.8.14</version>
+    </dependency>
+    <!-- WebFlux 支持 -->
+    <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+        <version>2.8.14</version>
+    </dependency>    
+    ```
+    - 自定义配置（可不配置默认）
+    ```
+    @Configuration
+    public class SpringDocConfig {
+    
+        @Bean
+        public OpenAPI openAPI(){
+            return new OpenAPI()
+                    .info(new Info().title("Personal Spring Doc")
+                            .description("自定义SpringDoc配置")
+                            .version("v1.0.0")
+                    );
+        }
+    }    
+    ```
+    - 访问地址
+    ```
+    方式一：
+    http(s)://ip:port/swagger-ui/index.html
+    
+    方式二（以JSON格式展示）：
+    // context-path表示上下文
+    http(s)://ip:port/context-path/v3/api-docs
+    ```
+    - 相关注解
+      - `@Tag`：描述整个Controller
+      - `@Operation`：描述具体接口信息
+      - `@Parameter`：描述参数信息
+      - `@ApiRespose`：接口响应描述信息
+      - `@Scheme`：描述对象信息
+      ```
+      @Tag(name = "SpringDocController",description = "SpringDoc样例")
+      @RestController
+      @RequestMapping("/docs")
+      public class SpringDocController {
+      
+          @Autowired
+          BootUserRepository repository;
+      
+      
+          @Operation(summary ="获取用户信息",  description = "返回用户列表", 
+            parameters = {  // 用于描述传入参数
+                  @Parameter(name = "username", description = "用户名"),
+            }
+          )
+          @GetMapping("/")
+          public ResponseEntity<List<BootUser>> list(String username {
+              return ResponseEntity.ok(repository.findAll());
+          }
+      }      
+      ```
+24. 24
 
