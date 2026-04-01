@@ -1158,5 +1158,55 @@
           }
       }      
       ```
-24. 
+24. 集成Tess4J图像文字识别
+    - `OCR（Optical Character Recognition）`技术的工作流程通常包括以下几个步骤
+      - 图像预处理：包括图像的获取、二值化、去噪、旋转校正、分割等，以提高后续识别的准确性
+      - 文本检测：在图像中定位文本的位置，通常是通过检测文本的行、单词或字符边界
+      - 特征提取：从图像中提取文本的特征，这些特征将用于识别过程
+      - 字符识别：将提取的特征与已知字符的模式进行匹配，以识别每个字符
+      - 后处理：包括对识别结果进行校对、格式化、布局分析等，以提高整体的可读性和准确性
+    -  `Tesseract OCR`：开源OCR引擎，是目前最准确、最流行的开源 OCR 工具之一
+    - `Tess4J`：是一个 Java 库，它是Tesseract OCR引擎的Java封装器。通过Tess4J，程序可以调用Tesseract来执行光学字符识别（OCR）任务，即将图像中的文字转换为可编辑和可搜索的文本格式
+    - Tess4j的特点：
+      - 易于集成：Tess4J提供了简单的API，使得在Java应用程序中使用Tesseract变得非常容易
+      - 跨平台：Tess4J可以在任何支持Java的操作系统上运行，包括Windows、macOS和Linux
+      - 功能丰富：Tess4J支持Tesseract的所有主要功能，包括多语言识别、自定义训练等
+    - 集成步骤
+      - 下载字体库：`https://github.com/tesseract-ocr/tessdata`
+        - `chi_sim.traineddata`：中文字体库
+        - `eng.traineddata`：英文字体库
+      - 引入依赖
+        ```xml
+        <dependency>
+          <groupId>net.sourceforge.tess4j</groupId>
+          <artifactId>tess4j</artifactId>
+          <version>4.1.1</version>
+        </dependency>
+        ```
+      - 配置字体库
+        ```properties
+        # --- Tess4J图像文字识别 ---
+        # 字体库文件目录
+        tess4j.data-path=classpath:fontlib
+        # 中文字体库
+        tess4j.chinese-train-data=chi_sim
+        # 英文字体库
+        tess4j.english-train-data=eng
+        ```
+      - 配置类
+        ```java
+        @Data
+        @Configuration
+        @ConfigurationProperties(prefix = "tess4j")
+        public class Tess4JConfig {
+        
+            private String dataPath;
+        
+            private String chineseTrainData;
+        
+            private String englishTrainData;
+        
+        }         
+        ```
+25. 
 
