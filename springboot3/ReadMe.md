@@ -1208,5 +1208,79 @@
         
         }         
         ```
-25. 
+25. 采集硬件信息
+    - 引入核心依赖
+    ```xml
+    <!-- 系统硬件信息采集核心依赖 -->
+    <dependency>
+        <groupId>com.github.oshi</groupId>
+        <artifactId>oshi-core</artifactId>
+        <version>6.6.0</version>
+    </dependency>
+    <dependency>
+       <groupId>net.java.dev.jna</groupId>
+       <artifactId>jna</artifactId>
+       <version>5.18.1</version>
+    </dependency>
+    ```
+    - 工具类
+    ```java
+    public class SystemDeviceInfoUtil {
+    
+        // 单例，避免频繁创建SystemInfo对象
+        private static final SystemInfo INSTANCE = new SystemInfo();
+    
+        /**
+         * 私有构造，禁止外部实例化
+         */
+        private SystemDeviceInfoUtil() {
+    
+        }
+    
+        /**
+         * 获取操作系统信息
+         */
+        public static OperatingSystem getOsInfo() {
+            return INSTANCE.getOperatingSystem();
+        }
+    
+        /**
+         * 获取CPU信息
+         */
+        public static CentralProcessor getCpuInfo() {
+            return INSTANCE.getHardware().getProcessor();
+        }
+    
+        /**
+         * 获取内存信息
+         */
+        public static GlobalMemory getMemoryInfo() {
+            return INSTANCE.getHardware().getMemory();
+        }
+    
+        /**
+         * 获取磁盘信息（所有挂载点）
+         */
+        public static List<OSFileStore> getDiskInfo() {
+            return getOsInfo().getFileSystem().getFileStores();
+        }
+    
+        /**
+         * 获取网络接口信息
+         */
+        public static List<NetworkIF> getNetworkInfo() {
+            return INSTANCE.getHardware().getNetworkIFs();
+        }
+    
+        /**
+         * 格式化字节数（B→KB→MB→GB）
+         */
+        public static String formatBytes(long bytes) {
+            return FormatUtil.formatBytes(bytes);
+        }
+    }
+    ```
+    - 实体类
+26. `Spring Modulith`模块化单体应用
+27. 1
 
