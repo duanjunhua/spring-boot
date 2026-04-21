@@ -1282,5 +1282,53 @@
     ```
     - 实体类
 26. `Spring Modulith`模块化单体应用
+    - 模块化单体架构是一种基于模块概念组织源代码的架构风格，支持构建结构良好、领域对齐的SpringBoot应用
+    - 引入BOM及依赖
+    ```xml
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-bom</artifactId>
+                <version>1.4.2</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 核心依赖 -->
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-api</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+    ```
+    - `Spring Modulith`的核心概念是应用模块，应用模块是功能单元，向其他模块暴露 API，同时隐藏内部实现
+    - 设计应用时，**每个领域对应一个应用模块**
+    - `Spring Modulith`提供多种模块表达方式，可将领域模块作为应用主包的直接子包
+    ```
+    ├───pom.xml            
+    ├───src
+    ├───main
+    │   ├───java
+    │   │   └───com.duanjh
+    │   │       └───module A
+    │   │       └───module B
+    │   │           ├───sub-module B
+    │   │       └───module C
+    │   │           ├───sub-module C
+    │   │       │ SpringBoot3Application.java
+    ```
+    - `Spring Modulith`通过应用模块基包的子包实现模块封装
+      - 模块可访问其他模块的内容
+      - 但不能访问其他模块的子包
+      - `internal`包下的表示内部实现，包中的类不能被外部引用
+    - 模块交互有两种方式：直接依赖其他模块的 Spring Bean，或使用事件
+    - `Spring Modulith`推荐使用Spring应用事件实现模块通信，以最大限度解耦
 27. 1
 
