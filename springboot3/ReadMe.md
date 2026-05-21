@@ -1284,7 +1284,7 @@
 26. `Spring Modulith`模块化单体应用
     - 模块化单体架构是一种基于模块概念组织源代码的架构风格，支持构建结构良好、领域对齐的SpringBoot应用
     - 引入BOM及依赖
-    ```xml
+    ```
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -1330,5 +1330,393 @@
       - `internal`包下的表示内部实现，包中的类不能被外部引用
     - 模块交互有两种方式：直接依赖其他模块的 Spring Bean，或使用事件
     - `Spring Modulith`推荐使用Spring应用事件实现模块通信，以最大限度解耦
-27. 1
+27. 集成LangChain4j
+    - 总体架构
+    ![LangChain4j整体架构](docs/framework.png)
+      - 左侧Java应用
+      - 中间是`LangChain4j Core`：将所有关键抽象都放在一个蓝色大块里（`AI Services、ChatLanguageModel、Tools、Memory、RAG、Embedding Store、Document处理、输出解析`）
+      - 右侧是三列可插拔的外部能力：`LLM 提供商、嵌入模型、向量数据库`。每一列都是“同一个接口、多个实现”的典型SPI风格
+      - 底部是面向企业工程化的横切关注点：`Micrometer、OpenTelemetry、日志、Spring Boot Starter`
+    - 分层架构
+    ![分层架构](docs/layer-framework.png)
+      - `应用层`：面向用户的产品形态。聊天机器人、RAG 问答、Agent、文档总结、代码助手
+      - `高级API层（AI Services）`：用声明式方式描述AI能力，让业务代码保持干净。
+      - `核心抽象层`：框架的"骨架"。`ChatLanguageModel、EmbeddingModel、ChatMemory、ContentRetriever、ToolExecutor、OutputParser`。决定了设计品味，也决定了可替换性
+      - `集成层`：对接各种外部系统的适配器，分三类（`LLM 适配器、向量库适配器、工具适配器`）
+      - `基础设施层`：HTTP Client、JSON序列化、重试与熔断、可观测性、Spring（Quarkus）启动器
+    - 接入LLM需要考虑以下问题
+      - 写HTTP请求去调OpenAI、Azure、Anthropic
+      - 拼Prompt，处理 token、处理SSE流式响应
+      - 实现多轮对话，维护历史消息
+      - 做RAG，分块、做向量化、向量检索
+      - 模型“调用函数”，设计`JSON Schema`、解析返回、执行方法
+    - LangChain4j就是把上述通用流程抽象出来，提供一套统一的、面向对象的、Java 味十足的API
+    - LangChain4j在API设计上充分考虑了强类型、注解驱动、依赖注入、显式接口特征，如：
+      - `@AiService、@SystemMessage、@UserMessage、@Tool`d注解声明能力
+      - 用`ChatLanguageModel、EmbeddingModel、EmbeddingStore`清晰的接口做抽象
+      - 用`Spring Boot Starter / Quarkus Extension`原生接入IoC容器
+    - LangChain4j适合以下几类场景
+      - **企业内部智能问答 / 知识库**：结合 RAG，把Confluence、PDF、数据库中的资料变成可问答的助手
+      - **客服 / 营销对话机器人**：多轮会话、记忆、上下文，天然适合`ChatMemory + Tools`的组合
+      - **业务系统里的AI小能手**：比如自动生成周报、自动提取合同字段、自动打标签、自动写SQL
+      - **Agent / Copilot 类应用**：模型不仅答题，还会调用系统内的工具完成任务
+    - 快速搭建
+      - 环境准备
+        - JDK17及以上（21为推荐版本）
+        - Maven3.8+或Gradle7+
+        - 可用的LLM调用通道，如：OpenAI API Key或Ollama本地模型等
+      - 依赖引入
+      ```
+      <properties>
+         <langchain4j.version>0.35.0</langchain4j.version>
+      </properties>
+      
+      <dependencies>
+      
+          <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+         
+         <!-- 可选：本地嵌入模型，做 RAG 不想花钱买 embedding 时很好用 -->
+         <dependency>
+           <groupId>dev.langchain4j</groupId>
+           <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
+           <version>${langchain4j.version}</version>
+         </dependency>
+      </dependencies>
+      ```
+      - 对话GPT
+      ```
+      public static void main(String[] args) {
+          ChatLanguageModel model = OpenAiChatModel.builder()
+                  .baseUrl("http://127.0.0.1:11434/v1")
+                  .apiKey("123")
+                  .modelName("deepseek-r1:1.5b")
+                  .temperature(Double.parseDouble("0.5"))
+                  .logRequests(true)
+                  .logResponses(true)
+                  .build();
+
+          String answer = model.generate("请用一句话解释什么是LangChain4j");
+          System.out.println(answer);
+      }
+      ```
+      - 高级AI Services
+        - 参数配置
+        ```
+        # --- LangChain4j AI智能体 ---
+        # Ollama作为本地模型运行平台，其API设计遵循了OpenAI的兼容规范，要求/v1作为基础路径，如：http://localhost:11434/v1
+        langchain4j.open-ai.chat-model.base-url=http://localhost:11434/v1
+        # 对应的API KEY，本地Ollama不为空即可
+        langchain4j.open-ai.chat-model.api-key=123
+        # 调用模型
+        langchain4j.open-ai.chat-model.model-name=deepseek-r1:1.5b
+        # 配置温度系数，决定每次生成结果的随机性，值越大、输出结果越随机
+        langchain4j.open-ai.chat-model.temperature=0.2
+        ```
+      ```java
+      @AiService
+      public interface Assistant {
+          
+          @SystemMessage("你是一位高速公路养护专家")
+          String chat(String message);
+          
+          @SystemMessage("你是一位资深的中英互译专家，翻译力求准确、自然、避免直译腔。")
+          String translate(@UserMessage String text);
+          
+      }
+      ```
+    - 核心技术
+      - LangChain4j的核心其实就七件事
+        - 模型
+        - AI Services
+        - 记忆
+        - 工具
+        - 检索增强
+        - 流式
+        - 结构化输出
+      - ChatLanguageModel是整个框架最底层也最关键的接口，所有模型提供商（OpenAI、Anthropic、Gemini、Ollama、Azure…）都只需要实现这一个接口
+      ```
+      public interface ChatLanguageModel {
+            Response<AiMessage> generate(List<ChatMessage> messages);
+            default String generate(String userMessage) { ... }
+            default Response<AiMessage> generate(ChatMessage... messages) { ... }
+      }
+      ```
+        - 消息类型，与OpenAI Chat Completions的role模型一致
+          - SystemMessage：设定角色、设定约束
+          - UserMessage：用户输入
+          - AiMessage：模型回复
+          - ToolExecutionResultMessage：工具执行结果
+      - AI Services：声明式的"魔法"
+      ```
+      /**
+      * 底层原理是动态代理 + 模板渲染：方法入参通过@V绑定到Prompt模板的变量
+      */
+      @SystemMessage("你是一位科技博客的主编，擅长把复杂概念讲成故事。")
+      @UserMessage("请根据下面的关键词写一段不少于 200 字的引言：" +
+      "关键词：{{keywords}} " +
+      "目标读者：{{audience}}")
+      String write(@V("keywords") String keywords, @V("audience") String audience);
+      ```
+      - ChatMemory：让模型拥有"上下文"。LLM本身是无状态的，每一次调用都是独立的，LangChain4j把“把历史消息再塞回去”抽象成了ChatMemory
+      ```
+      /**
+       * @MemoryId用来区分不同用户/会话，每个ID对应一条独立记忆
+       * MessageWindowChatMemory是滑动窗口策略，除此之外还有TokenWindowChatMemory，按token预算裁剪更精准
+       * ChatMemoryStore接口允许把历史消息落到Redis、MySQL
+       */
+      String chatWithMemory(@MemoryId String userId, @UserMessage String message);
+      ```
+      - Tools/Function Calling：让模型调用你的方法
+      ![处理流程](docs/tools_call_flow.png)
+      - 工具类
+      ```java
+      @Component
+      public class BootUserTool {
+      
+          private final BootUserRepository repository;
+      
+          public BootUserTool(BootUserRepository repository) {
+              this.repository = repository;
+          }
+      
+          @Tool("根据用户名查询用户信息")
+          public BootUser getBootUser(@P("用户名") String username) {
+              return repository.findByUsername(username);
+          }
+      }
+      ```
+      - ChatModel及工具配置
+      ```java
+      @Configuration
+      public class AiConfig {
+      
+          @Value("${langchain4j.open-ai.chat-model.base-url}")
+          private String baseUrl;
+      
+          @Value("${langchain4j.open-ai.chat-model.api-key}")
+          private String apiKey;
+      
+          @Value("${langchain4j.open-ai.chat-model.model-name}")
+          private String modelName;
+      
+          @Value("${langchain4j.open-ai.chat-model.temperature}")
+          private Double temperature;
+      
+          @Autowired
+          BootUserRepository repository;
+      
+          @Bean
+          public OpenAiChatModel chatModel() {
+              return OpenAiChatModel.builder()
+                      // 模型调用地址
+                      .baseUrl(baseUrl)
+                      // API Key
+                      .apiKey(apiKey)
+                      // 使用的模型
+                      .modelName(modelName)
+      
+                      // 温度系数
+                      .temperature(temperature)
+      
+                      .responseFormat("json")
+      
+                      .logRequests(true)
+                      .logResponses(true)
+                      .build();
+          }
+      
+          @Bean
+          public StreamingChatModel streamingChatModel() {
+              return OpenAiStreamingChatModel.builder()
+                      .baseUrl(baseUrl)
+                      .apiKey(apiKey)
+                      .modelName(modelName)
+                      .temperature(temperature)
+                      .logRequests(true)
+                      .logResponses(true)
+                      .build();
+          }
+      
+          @Bean
+          public ChatMemoryProvider chatMemoryProvider(){
+              return memoryId ->
+                      // 每个会话独立存储
+                      MessageWindowChatMemory.builder()
+                      // 指定对话ID
+                      .id(memoryId)
+                      // 限制记忆条数，防内存溢出
+                      .maxMessages(20)
+                      // 注入持久化存储，可替换为 Redis 等持久化存储
+                      .chatMemoryStore(new InMemoryChatMemoryStore())
+                      .build();
+          }
+      
+          @Bean(name = "memoryAssistant")
+          public Assistant assistant(){
+      
+              return AiServices.builder(Assistant.class)
+      
+                      // 模型设置
+                      .chatModel(chatModel())
+                      .streamingChatModel(streamingChatModel())
+      
+                      // 工具调用
+                      .tools(new BootUserTool(repository))
+      
+                      // 聊天内容缓存
+                      .chatMemoryProvider(chatMemoryProvider())
+                      .build();
+          }
+      }
+      ```
+      - AI服务接口，也可通过@AiService注解指定chatModel及tools
+      ```java
+      public interface Assistant {
+          // ...
+      
+          BootUser functionalCall(@UserMessage String username);
+      }      
+      ```
+    - RAG（`Retrieval-Augmented Generation`）：给模型外挂一个"知识库"。把资料切成小块、向量化存进向量库；提问时先检索相关片段，再拼进 Prompt 给模型
+      - 工作原理
+      ![RAG原理](docs/Rag.png)
+        - 上部是"离线"流程：`原始数据源 → 加载文档 → 切块 → 向量化 → 写入向量库`。通常在数据接入时或定时任务里做
+        - 下部是"在线"流程：`用户的问题 → 同样走向量化 → 去同一个向量库里做相似度检索 → 取 Top-K → 拼入 Prompt → 交给 LLM → 返回答案`
+        - 上下部共享同一个Embedding模型和同一个向量库
+      - LangChain4j 把 RAG 拆成了几个高度解耦的接口
+        - `DocumentLoader`：从文件、URL、数据库加载原始文档
+        - `DocumentSplitter`：切块（按段落、按句子、按 token）
+        - `EmbeddingModel`：把文本变成向量
+        - `EmbeddingStore`：向量库（`Pinecone、Milvus、PgVector、Elasticsearch…`）
+        - `ContentRetriever`：把以上组合起来，对外提供"检索"这一件事
+      - 参数配置
+      ```
+      # --- 向量化模型 ---
+      langchain4j.open-ai.embedding-model.base-url=http://localhost:11434/v1
+      langchain4j.open-ai.embedding-model.api-key=sk-123
+      langchain4j.open-ai.embedding-model.model-name=text-embedding-3-large
+      ```
+      - 向量化模型配置
+      ```java
+      @Configuration
+      public class EmbeddingModelConfig {
+      
+          @Value("${langchain4j.open-ai.embedding-model.base-url}")
+          private String baseUrl;
+      
+          @Value("${langchain4j.open-ai.embedding-model.api-key}")
+          private String apiKey;
+      
+          @Value("${langchain4j.open-ai.embedding-model.model-name}")
+          private String modelName;
+      
+          @Bean(name = "localOpenAiEmbeddingModel")
+          public EmbeddingModel embeddingModel(){
+              return OpenAiEmbeddingModel.builder()
+                      // 模型调用地址
+                      .baseUrl(baseUrl)
+                      // API Key
+                      .apiKey(apiKey)
+                      // 使用的模型
+                      .modelName(modelName)
+                      // 向量化失败重试次数
+                      .maxRetries(5)
+                      .build();
+          }
+      
+          @Bean(name = "memoryEmbeddingStore")
+          public EmbeddingStore  embeddingStore(){
+              return new InMemoryEmbeddingStore();
+          }
+      
+          @Bean(name = "memoryContentRetriever")
+          public ContentRetriever retriever(){
+              return EmbeddingStoreContentRetriever.builder()
+                      // 向量化模型
+                      .embeddingModel(embeddingModel())
+                      // 向量化持久化
+                      .embeddingStore(embeddingStore())
+                      // 最多查询5条结果
+                      .maxResults(5)
+                      // 最小相似分
+                      .minScore(0.7)
+                      .build();
+          }
+      }
+      ```
+      - AI服务接口配置内容检索器
+      ```
+      @Bean(name = "memoryAssistant")
+      public Assistant assistant(){
+  
+          return AiServices.builder(Assistant.class)
+  
+                  // 模型设置
+                  .chatModel(chatModel())
+                  .streamingChatModel(streamingChatModel())
+  
+                  // 设置RAG向量化内容检索器
+                  .contentRetriever(retriever)
+  
+                  // 工具调用
+                  .tools(new BootUserTool(repository))
+  
+                  // 聊天内容缓存
+                  .chatMemoryProvider(chatMemoryProvider())
+                  .build();
+      }
+      ```
+    - Streaming：打字机式的流式输出
+      - 在Web场景下，配合`Spring WebFlux/SSE`能将`token`实时推到前端
+      - `AI Services`也支持流式：需将方法返回值声明为`TokenStream`
+      ```java
+      @Test
+      public void streamChatTest(){
+            streamModel.chat("介绍下LangChain4j，要求字数在200字以内", new StreamingChatResponseHandler() {
+              @Override
+              public void onPartialResponse(String partialResponse) {
+                  // 流式输出
+                  System.out.println(partialResponse);
+              }
+  
+              @Override
+              public void onCompleteResponse(ChatResponse completeResponse) {
+                  System.out.println("\n结束！");
+              }
+  
+              @Override
+              public void onError(Throwable error) {
+                  System.out.println(error.getMessage());
+              }
+          });
+      }
+      ```
+    - 结构化输出：把字符串"变成"对象
+      - 模型返回的是自然语言，但业务系统需要结构化数据。LangChain4j会根据AI Service方法的返回类型，自动帮你把模型的回复解析为目标POJO
+        - 框架会把目标类型的`JSON Schema`以"请严格按这个格式返回"的方式写进Prompt
+        - 收到回复后自动反序列化为POJO对象。失败时还能触发一次LLM自修复
+    - 遵循原则
+      - Prompt与代码分离：长Prompt不要硬编码在注解里，用PromptTemplate+配置文件（甚至数据库）管理
+      - 对LLM调用做幂等与重试：网络抖动、Token 限流是常态，用重试策略 + 退避算法，避免一次抖动毁掉整次用户请求
+      - 可观测性：至少接入Micrometer，把每次调用的token数、延迟、失败率打出来；还可以接OpenTelemetry做链路追踪，保证RAG请求从问题进来到答案出去的每一段耗时都看得见
+      - 内容审查与越狱防御：在SystemMessage里显式规定"不回答的话题"，并在入口处对用户输入做一次过滤
+      - "模型选型"配置化：不同场景用不同模型，简单分类任务用小模型省钱，复杂问答用大模型保质量
+      - RAG切分策略：段落语义是否完整、块大小是否合理、是否做了重叠，往往比换一套向量库影响更大
+      - 数据保护：企业内部文档不随意发到外部模型；必要时用私有Ollama、或本地化的通义千问/DeepSeek等
+    - 总结
+      - LangChain4j用`ChatLanguageModel`抹平了所有大模型的差异
+      - LangChain4j用`AI Services`把Prompt工程藏在注解背后
+      - LangChain4j用`ChatMemory`、`Tools`、`RAG`把高频场景标准化
+      - LangChain4j用`Spring Boot`或`Quarkus Starter`降低集成成本
+28. 1
+29. 
 

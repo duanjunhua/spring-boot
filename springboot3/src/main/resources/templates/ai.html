@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SSE实时聊天室 - Server-Sent Events 对话框</title>
+    <!-- 引入 jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 对话框容器 */
+        .sse-chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            transition: all 0.3s ease;
+        }
+
+        /* 头部 */
+        .chat-header {
+            background: #2c3e66;
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .title-area h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .title-area p {
+            font-size: 0.75rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .connection-status {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            box-shadow: 0 0 5px #2ecc71;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.disconnected {
+            background-color: #e74c3c;
+            box-shadow: none;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(0.8);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+
+        /* 消息区域 */
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 18px;
+            background: #f8f9fc;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 自定义滚动条 */
+        .messages-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .messages-area::-webkit-scrollbar-track {
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        .messages-area::-webkit-scrollbar-thumb {
+            background: #b8c0cc;
+            border-radius: 10px;
+        }
+
+        /* 消息气泡通用样式 */
+        .message-bubble {
+            max-width: 80%;
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.2s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 系统消息特殊样式 */
+        .system-message {
+            align-items: center;
+            margin: 8px 0;
+        }
+        .system-bubble {
+            background: #e9ecef;
+            color: #495057;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            font-style: italic;
+        }
+
+        /* 普通消息区分左右：全部靠左显示（因为是广播），但加一点样式区别不同用户 */
+        .normal-message {
+            align-items: flex-start;
+        }
+        .message-content {
+            background: white;
+            border-radius: 18px;
+            border-top-left-radius: 4px;
+            padding: 10px 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+            line-height: 1.45;
+        }
+        .message-meta {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-bottom: 4px;
+            margin-left: 8px;
+            display: flex;
+            gap: 8px;
+        }
+        .nickname {
+            font-weight: 600;
+            color: #4a6fa5;
+        }
+        .time {
+            font-size: 0.65rem;
+        }
+
+        /* 输入区域 */
+        .input-area {
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nickname-input {
+            background: #f1f3f5;
+            border: 1px solid #dee2e6;
+            border-radius: 30px;
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            outline: none;
+            width: 110px;
+            transition: 0.2s;
+        }
+        .nickname-input:focus {
+            border-color: #667eea;
+            background: white;
+        }
+        .message-input {
+            flex: 1;
+            background: #f1f3f5;
+            border: 1px solid #dee2e6;
+            border-radius: 30px;
+            padding: 10px 18px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        .message-input:focus {
+            border-color: #667eea;
+            background: white;
+        }
+        .send-btn {
+            background: #667eea;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .send-btn:hover {
+            background: #5a67d8;
+            transform: scale(0.98);
+        }
+        .send-btn:active {
+            background: #4c51bf;
+        }
+
+        /* 底部提示 */
+        .chat-footer {
+            background: #f8fafc;
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 8px;
+            color: #6c757d;
+            border-top: 1px solid #edf2f7;
+        }
+
+        /* 响应式 */
+        @media (max-width: 550px) {
+            .message-bubble {
+                max-width: 95%;
+            }
+            .nickname-input {
+                width: 80px;
+            }
+            .send-btn {
+                padding: 8px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sse-chat-container">
+    <div class="chat-header">
+        <div class="title-area">
+            <h2>📡 SSE 实时对话窗</h2>
+            <p>Server-Sent Events · 广播聊天室</p>
+        </div>
+        <div class="connection-status" id="connStatus">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">连接中...</span>
+        </div>
+    </div>
+
+    <div class="messages-area" id="messagesArea">
+        <div class="system-message message-bubble">
+            <div class="system-bubble">✨ 欢迎来到SSE聊天室，连接后将实时接收消息 ✨</div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="nicknameInput" class="nickname-input" placeholder="昵称" maxlength="20" value="duanjh">
+        <input type="text" id="messageInput" class="message-input" placeholder="输入消息..." autocomplete="off">
+        <button id="sendBtn" class="send-btn">发送 ➤</button>
+    </div>
+    <div class="chat-footer">
+        💡 基于 Server-Sent Events (SSE) | 消息通过服务器广播，所有在线用户实时同步
+    </div>
+</div>
+
+<script>
+    $(function() {
+        // ----- DOM 元素 -----
+        const $messagesArea = $('#messagesArea');
+        const $nicknameInput = $('#nicknameInput');
+        const $messageInput = $('#messageInput');
+        const $sendBtn = $('#sendBtn');
+        const $statusDot = $('#statusDot');
+        const $statusText = $('#statusText');
+
+        // 配置 SSE 端点 (需要与后端地址一致)
+        const SSE_URL = '/ai/chat-memory';
+        const POST_URL = '/ai/chat-memory';
+
+        let eventSource = null;
+        let reconnectAttempt = 0;
+        let isConnecting = false;
+
+        // 工具函数：显示系统消息 (不通过SSE)
+        function appendSystemMessage(text, isError = false) {
+            const $sysMsg = $(`
+                <div class="system-message message-bubble">
+                    <div class="system-bubble" style="${isError ? 'background:#ffe3e3; color:#c0392b;' : ''}">📢 ${escapeHtml(text)}</div>
+                </div>
+            `);
+            $messagesArea.append($sysMsg);
+            scrollToBottom();
+        }
+
+        // 显示来自SSE的公共消息 (广播)
+        function appendChatMessage(nickname, message, timestamp) {
+            if (!nickname || !message) return;
+            const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : new Date().toLocaleTimeString();
+            const $msgDiv = $(`
+                <div class="normal-message message-bubble">
+                    <div class="message-meta">
+                        <span class="nickname">${escapeHtml(nickname)}</span>
+                        <span class="time">${escapeHtml(timeStr)}</span>
+                    </div>
+                    <div class="message-content">
+                        ${escapeHtml(message)}
+                    </div>
+                </div>
+            `);
+            $messagesArea.append($msgDiv);
+            scrollToBottom();
+        }
+
+        // 滚动到底部
+        function scrollToBottom() {
+            const $container = $messagesArea;
+            $container.scrollTop($container[0].scrollHeight);
+        }
+
+        // 简单的XSS防护
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+
+        // 发送消息到服务器
+        function sendMessage() {
+            let nickname = $nicknameInput.val().trim();
+            const message = $messageInput.val().trim();
+
+            if (!message) {
+                appendSystemMessage('消息不能为空', true);
+                return;
+            }
+            if (!nickname) {
+                nickname = "匿名用户";
+            }
+            if (nickname.length > 20) nickname = nickname.substring(0,20);
+
+            // 临时禁用发送按钮动画避免重复提交
+            $sendBtn.prop('disabled', true).text('发送中...');
+
+            $.ajax({
+                url: POST_URL,
+                type: 'GET',
+                contentType: 'application/json',
+                data: {
+                    userId: nickname,
+                    question: message
+                },
+                timeout: 8000,
+                success: function(res) {
+                    console.log(res)
+                    // 发送成功，清空输入框
+                    $messageInput.val('');
+                    // 不主动增加消息，等待服务器通过SSE广播回来，这样所有客户端消息顺序一致
+                    appendSystemMessage(res, false);
+                },
+                error: function(xhr, status, error) {
+                    console.error('发送失败');
+                    console.log(error)
+                    if (xhr.status === 400) errMsg = '消息格式错误';
+                    else if (xhr.status === 500) errMsg = '服务器内部错误';
+                    appendSystemMessage(`❌ ${errMsg}`, true);
+                },
+                complete: function() {
+                    $sendBtn.prop('disabled', false).text('发送 ➤');
+                    // 重新聚焦输入框
+                    $messageInput.focus();
+                }
+            });
+        }
+
+        // 回车发送
+        $messageInput.on('keypress', function(e) {
+            if (e.which === 13 && !$sendBtn.prop('disabled')) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        $sendBtn.on('click', function() {
+            if ($sendBtn.prop('disabled')) return;
+            sendMessage();
+        });
+
+        // 当昵称改变时无需额外操作，发送时会携带最新昵称
+        // 增加焦点自动滚动
+        $messageInput.focus();
+    });
+</script>
+</body>
+</html>

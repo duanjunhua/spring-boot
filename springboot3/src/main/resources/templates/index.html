@@ -4,19 +4,53 @@
         <title>首页</title>
     </head>
     <body class="layout-fixed">
-        <h1>首页</h1>
+        <h1>首页</h1><h3><div id="time"></div></h3>
+
+        <br/>
+        <span>1. Shiro</span>
         <br/>
         <a th:href="@{/logout}">登出</a>
-        <br/>
 
+        <br/>
+        <br/>
+        <span>2. Thymeleaf</span>
+        <br/>
         <a th:href="@{/sysUser/list}">用户列表</a>
         &nbsp;
         <a th:href="@{/sysUser/add}">用户新增</a>
         &nbsp;
         <a th:href="@{/thymeleaf/list}">Thymeleaf增删改查</a>
 
-        &nbsp;
-        <a th:href="@{/flux/stream}">流程输出</a>
+        <br/>
+        <br/>
+        <span>3. 流式</span>
+        <br/>
+        <a th:href="@{/flux/stream}">流式输出</a>
+
+        <br/>
+        <br/>
+        <span>4. LangChain4j</span>
+        <br/>
+        <a th:href="@{'/ai/chat?question=' + 'LangChain4j是什么?'}">AI输出：LangChain4j是什么?</a>
+        <br/>
+        <a th:href="@{'/ai/translate?text=' + 'LangChain4j是什么？要求以英文格式回答'}">AI翻译：LangChain4j是什么?要求以英文形式展示</a>
 
     </body>
+    <script>
+        function updateTime() {
+            let now = new Date();
+            let year = now.getFullYear();
+            let month = now.getMonth() + 1;
+            let day = now.getDate();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            let timeString = year + "年" + month + "月" + day + "日 " + hours + ":" + minutes + ":" + seconds;
+            document.getElementById("time").innerText = timeString;
+        }
+        window.onload = function() {
+            updateTime(); // 页面加载时显示当前时间
+            setInterval(updateTime, 1000); // 每秒更新时间
+        }
+    </script>
 </html>
