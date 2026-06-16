@@ -1717,6 +1717,222 @@
       - LangChain4j用`AI Services`把Prompt工程藏在注解背后
       - LangChain4j用`ChatMemory`、`Tools`、`RAG`把高频场景标准化
       - LangChain4j用`Spring Boot`或`Quarkus Starter`降低集成成本
-28. 1
+28. 集成WarmFlow
+    - 表结构
+      - 流程定义
+        - **flow_definition**：流程定义表。记录流程的整体信息
+        - **flow_node**：流程节点表。记录流程中的各个节点信息
+        - **flow_skip**：节点跳转关联表。记录节点之间的跳转关系，确保任务按计划推进
+      - 流程实例
+        - **flow_instance**：流程实例表。记录每一次流程实例的信息
+        - **flow_task**：待办任务表。记录待办任务信息
+        - **flow_his_task**：历史任务记录表。记录已完成的任务信息
+        - **flow_user**：流程用户表。记录任务是谁可以办理，用于任务分配
+    - 引入依赖
+    - 1
+    - 支持的功能
+      - **通过**：当前节点处理人，对当前流程节点进行审核通过，完成后进入下一节点
+      - **退回**：当前节点处理人，将流程驳回至之前已经处理过的任务节点，要求重新处理
+      - **任意通过**：任意通过到指定节点
+      - **任意退回**：任意退回到指定节点
+      - **驳回到上一个任务**：任务直接驳回到，最后一次跳转到当前任务的前置任务
+      - **超时自动审批**：超过一定时间自动审批通过或者退回
+      - **拿回**：拿回到当前人最近办理的任务
+      - **撤销**：将工作流退回给发起人审批，以便进行修改或重新处理
+      - **终止**：当前节点处理人，终止当前流程
+      - **委派**：A委派给B，B审批完了，在回到A，A再去办理，流程才会继续流转
+      - **转办**：任务转给其他人办理
+      - **加签**：办理中途，希望其他人一起参与办理
+      - **减签**：办理中途，希望某些人不参与办理
+      - **会签**：所有审批人审批通过，审批节点才会通过
+      - **票签**：满足设定的通过率，部分审批人审批通过，审批节点才会通过
+      - **或签**：一名办理人审批通过，审批节点才会通过
+      - **暂存**：复杂表单，一次性填写不完，需要保存草稿功能，开始节点的暂存
+    - 流程定义json
+    ```json
+    {
+        "flowCode": "leaveFlow-serial3",                   // 流程编码     
+        "flowName": "休假申请",					              // 流程名称
+        "category": "请假",								  // 流程类别  
+        "formCustom": "N",                               // 审批表单是否自定义（Y是 N否）
+        "formPath": "system/leave/approve",              // 审批表单路径
+        "listenerPath": "x.x@@x.x@@x.x",                 // 流程监听器路径，全限定名
+        "listenerType": "start,assignment,finish",       // 流程监听器类型
+        "version": "1",                                 // 流程版本
+        "ext": "xxx",                                   // 扩展字段，预留给业务系统使用
+        "nodeList": [                                   // 流程节点集合
+            {                                               
+                "coordinate": "380,200|380,200",       // 流程节点坐标
+                "nodeCode": "2",                      // 节点编码，definitionId+nodeCode唯一
+                "nodeName": "经理审批",              // 节点名称
+                "nodeRatio": 0.000,                  // 流程签署比例值, 0:或签，0-100：票签，100：会签
+                "nodeType": 1,                      // 节点类型（0开始节点 1中间节点 2结束节点 3互斥网关 4并行网关）
+                "permissionFlag": "1@@role:1",      // 权限标识（权限类型:权限标识，可以多个，用@@隔开)
+                "anyNodeSkip": "1",                 //任意结点跳转，目标节点编码
+                "listenerPath": "x.x@@x.x@@x.x",    //节点监听器路径，全限定名
+                "listenerType": "start,assignment,finish", // 节点监听器类型
+                "formCustom": "N",                         // 审批表单是否自定义（Y是 2否），不同节点可设置不同审批页面
+                "formPath": "system/leave/approve",        // 审批表单路径
+                "ext": "xxx",                              // 节点扩展属性
+                "skipList": [                              // 跳转线集合
+                    {                                          
+                    "coordinate": "430,200;550,200",      // 流程跳转坐标
+                    "nowNodeCode": "2",                   // 当前流程节点的编码
+                    "nextNodeCode": "3",                  // 下一个流程节点的编码
+                    "skipName": "xx",                     // 跳转名称
+                    "skipType": "PASS",                   // 跳转类型（PASS审批通过 REJECT退回）
+                    "skipCondition": "gt@@flag|4",        // 跳转条件
+                    }
+                ]
+            }
+        ]
+    }
+    ```
+    - 流程接口
+      - **DefService**流程定义
+        - `Definition importIs(is)`：导入流程输入流
+        - `Definition importJson(defStr)`：导入流程JSON字符串
+        - `Definition importDef(defJson)`：导入流程JSON对象
+        - `boolean saveAndInitNode(definition)`：新增流程，并初始化流程节点和流程跳转数据
+        - `boolean checkAndSave(definition)`：只新增流程定义表数据。definition：流程定义对象
+        - `void saveDef(defJson)`：保存流程节点和跳转。defJson：流程定义json对象
+        - `String exportJson(id)`：导出流程定义(流程定义、流程节点和流程跳转数据)的json字符串
+        - `Definition getAllDataDefinition(id)`：获取流程定义全部数据(包含节点和跳转)
+        - `DefJson queryDesign(id)`：查询流程设计所需的数据。如：如流程图渲染
+        - `List<Definition> queryByCodeList(flowCode)`：根据流程定义code列表查询流程定义
+        - `List<Definition> getByFlowCode(flowCode)`:根据流程定义code查询流程定义
+        - `Definition getPublishByFlowCode(flowCode)`：根据flowCode查询已发布的流程定义
+        - `void updatePublishStatus(defIds, publishStatus)`：更新流程定义发布状。defIds: 流程定义id列表[必传]；publishStatus: 流程定义发布状态[必传]
+        - `boolean removeDef(ids)`：删除流程定义相关数据
+        - `boolean publish(id)`：发布流程定义
+        - `boolean copyDef(id)`：复制流程定义
+        - `boolean unActive(id)`：挂起流程。流程定义挂起后，相关的流程实例都无法继续流转
+      - **InsService**流程实例
+        - `List<Instance> listByDefIds(defIds)`：根据流程定义id集合，查询流程实例集合
+        - `List<Instance> getByDefId(definitionId)`：根据流程定义id，查询流程实例集合
+        - `boolean remove(instanceIds)`：根据实例ids，删除流程
+        - `boolean active(Long id)`： 激活实例
+        - `boolean unActive(Long id)`： 挂起实例，流程实例挂起后，该流程实例无法继续流转
+      - **TaskService**待办任务
+        - `Instance pass(taskId, message, variable)`：流程通过。实现`PermissionHandler`，工作流内部会获取办理人权限标识（permissionFlag）和办理人唯一标识（handler）
+          - taskId: 流程任务id
+          - message: 审批意见
+          - variable: 流程变量
+        - `Instance passAtWill(taskId, nodeCode, message, variable)`：流程任意通过。实现`PermissionHandler`
+          - taskId: 流程任务id
+          - nodeCode: 如果指定节点,可[任意跳转]到对应节点
+          - message: 审批意见
+          - variable: 流程变量
+        - `Instance pass(taskId, message, variable, flowStatus, hisStatus)`：流程通过且自定义流程状态。实现`PermissionHandler`
+          - taskId: 流程任务id
+          - message: 审批意见
+          - variable: 流程变量
+          - flowStatus: 流程状态，自定义流程状态
+          - hisStatus: 历史任务表状态，自定义流程状态
+        - `Instance reject(taskId, message, variable)`：流程退回。实现`PermissionHandler`
+          - taskId: 流程任务id
+          - message: 审批意见
+          - variable: 流程变量
+        - `Instance skip(taskId, flowParams)`：传入流程任务id，流程跳转。flowParams包含如下字段
+          - skipType: 跳转类型(PASS审批通过 REJECT退回)
+          - nodeCode: 如果指定节点,可[任意跳转]到对应节点，严禁任意退回选择后置节点
+          - permissionFlag: 办理人权限标识，比如用户，角色，部门等，用于校验是否有权限办理；满足任一情况可以不传：流程设计时未设置办理人、ignore为true、实现了办理人权限处理器
+          - message: 审批意见
+          - handler: 办理人唯一标识，如用户id，用于记录历史表；如果实现了办理人权限处理器可不用传
+          - variable: 流程变量
+          - nextHandler: 执行的下个任务的办理人
+          - nextHandlerAppend: 个任务处理人配置类型（true-追加，false-覆盖，默认false）
+          - flowStatus: 流程状态，自定义流程状态
+          - ignore: 忽略权限校验（比如管理员不校验），默认不忽略
+      - [Warm Flow更多接口](https://www.warm-flow.com/master/primary/api.html#%E6%A0%B9%E6%8D%AE%E5%AE%9E%E4%BE%8Bid%E5%92%8C%E8%8A%82%E7%82%B9%E7%BC%96%E7%A0%81%E6%9F%A5%E8%AF%A2)
+    - 设计器集成
+      - 引入依赖
+      ```xml
+      <dependency>
+        <groupId>org.dromara.warm</groupId>
+        <artifactId>warm-flow-plugin-ui-sb-web</artifactId>
+        <version>1.8.5</version>
+      </dependency>
+      ```
+      - [配置](https://www.warm-flow.com/master/primary/designerIntroduced.html#_2-2-%E5%89%8D%E7%AB%AF%E5%BC%95%E5%85%A5%E8%AE%BE%E8%AE%A1%E5%99%A8)
+        - 后端路径放行，否则无法访问：`/warm-flow-ui/**, /warm-flow/**`
+      - 获取办理人列表`HandlerSelectService`
+        - `getHandlerType`：获取办理人权限设置列表tabs页签。如：用户、角色和部门等
+        - `getHandlerSelect`：获取办理人权限设置列表结果。如：用户列表、角色列表、部门列表等
+        - `handlerFeedback`：办理人权限名称回显。
+    - 获取流程类别`CategoryService`
+      - `queryCategory`：查询分类
+    - 取自定义表单路径信息`FormPathService`
+      - `queryFormPath`：查询自定义表单路径
+    - 流程图提示信息`ChartExtService`
+      - 实现ChartExtService, 才会开启提示框
+      - `initPromptContent`默认方法会自动执行, 初始化提示框和第一行提示信息，若不满足要求，可在execute方法中重新设置
+      - `void execute(DefJson defJson)`：设置流程图提示信息
+    - `GlobalListener `：全局监听器: 整个系统只有一个，任务开始、分派、完成和创建时期执行
+    - 办理人权限处理器`PermissionHandler`，包含以下方法
+      - `List<String> permissions()`：返回当前用户权限集合。办理人权限标识：比如用户，角色，部门等，用于校验是否有权限办理任务
+      ```java
+      @Override
+      public List<String> permissions() {
+        // 办理人权限标识，比如用户，角色，部门等, 流程设计时未设置办理人或者ignore为true可不传 [按需传输]
+        SysUser sysUser = SecurityUtils.getLoginUser().getUser();
+        List<SysRole> roles = sysUser.getRoles();
+        List<String> permissionList = StreamUtils.toList(roles, role -> "role:" + role.getRoleId());
+        if (sysUser.getUserId() != null) {
+          permissionList.add(String.valueOf(sysUser.getUserId()));
+        }
+        if (sysUser.getDeptId() != null) {
+          permissionList.add("dept:" + sysUser.getDeptId());
+        }
+        return permissionList;
+      }
+      ```
+      - `String getHandler()`：返回当前办理人：获取当前办理人：就是确定唯一用的，如用户id，通常用来入库，记录流程实例创建人，办理人
+      ```java
+      @Override
+      public String getHandler() {
+        SysUser sysUser = SecurityUtils.getLoginUser().getUser();
+        if (sysUser.getUserId() != null) {
+          return String.valueOf(sysUser.getUserId());
+        }
+        return null;
+      }
+      ```
+      - `List<String> convertPermissions(List<String> permissions)`：转换办理人，比如设计器中预设了能办理的人，如果其中包含角色或者部门id等，可以通过此接口进行转换成用户id
+    - 自定义数据填充器`DataFillHandler`
+    - 流程变量
+      - map类型，用于流程执行中的数据转递
+      - 条件表达式中，使用流程变量进行判断执行哪个任务
+      - 办理人表达式，通过流程变量动态指定办理人
+      - 在监听器中，可以获取流程变量
+      - 在执行流程时，可以设置流程变量，自定义使用
+      - 流程变量获取：`Map<String, Object> variableMap = instance.getVariableMap();`
+    - 条件表达式
+      - 默认：default@@${flag == 5 && flag > 4}，表示flag==5且flag>4成立
+      - 大于：gt@@flag|4，表示flag > 4成立
+      - 包含: like@@flag|4，表示flag值包含4时成立
+      - SpEL: spel@@#{@user.eval(#flag)}，具体调用User类的eval方法，参数为flag值
+      - Snel: snel@@#{@user.eval(flag)}
+      - 注意：表达式中的变量是整型，流程变量也要给整型 ${createBy == 1357280988086013951L}: 流程变量里面也要传long类型，不然会报错
+    - 监听器
+      - 监听器大类
+        - 节点监听器：在流程节点中配置，作用范围当前节点，只会执行小类中任意一个
+        - 流程监听器：在流程定义中配置，作用范围当前流程定义，所有节点会执行小类中任意一个
+        - 全局监听器：实现全局监听器四个接口，作用范围当前所有流程，包含可执行所有小类
+      - 监听器大类执行顺序：节点监听器 --> 流程监听器 --> 全局监听器
+      - 监听器小类
+        - start：开始监听器，任务开始办理时执行，数据初始化，办理人权限设置等
+        - assignment： 分派办理人监听器，动态修改代办任务信息，但不仅限于此
+        - finish：完成监听器，当前任务完成后执行，可对业务表更新，消息通知等
+        - create：创建监听器，任务创建时执行，比如数据初始化
+      - 监听器生命周期
+      ![监听器生命周期](docs/warmflow/life.png)
+      - 监听器设置：设置节点表的`listener_type`和`listener_path`字段
+        - `listener_type`：监听器类型，如start,assignment,finish,create等
+        - `listener_path`：监听器路径，支持配置类包名和表达式，如包名1,表达式1,包名2,表达式2等。默认支持内置spel或者snel表达式，支持扩展，比如：`#{@assignmentExpListener.notify(#listenerVariable)}`或`#{@assignmentExpListener.notify(listenerVariable)}`
+      - 匹配规则：默认先判断是否是监听器表达式，然后再去尝试加载类路径
+      - 节点和流程监听器
+        - 实现接口`org.dromara.warm.flow.core.listener.Listener`
+        - 
 29. 
 

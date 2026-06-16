@@ -41,6 +41,11 @@ public class ShiroConfig {
         map.put("/login", "anon");
         map.put("/loginPage", "anon");
 
+        /*------------- Warm Flow 后端放行部分路径 -----------------*/
+        map.put("/warm-flow-ui/**", "anon");
+        map.put("/warm-flow/**", "anon");
+
+
         // 配置退出过滤器
         map.put("/logout", "logout");
 

@@ -48,6 +48,11 @@ public class SysUser implements Serializable {
     private String password;
 
     /**
+     * 所属组织机构
+     */
+    private String deptId;
+
+    /**
      * 加密密码的盐
      */
     private String salt;
