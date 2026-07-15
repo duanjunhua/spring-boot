@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎页</title>
+</head>
+<body>
+<div style="width:80%;margin:50px auto">
+    <h1>欢迎您，<span th:text="${loginUser}"></span></h1>
+    <div style="margin:30px 0;">
+        <a th:href="@{/logout}" style="padding:10px 20px;background:#dc3545;color:white;text-decoration:none">退出登录</a>
+    </div>
+    <p>说明：超级管理员可跳过OAuth2认证，其他用户必须走SSO登录</p>
+</div>
+</body>
+</html>

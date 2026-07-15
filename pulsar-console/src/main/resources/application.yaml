@@ -1,0 +1,50 @@
+# 服务端口
+server:
+  port: 8080
+
+# 日志打印级别
+logging:
+  level:
+    root: info
+
+spring:
+  application:
+    # 应用名称
+    name: pulsar-console
+  # postgresql
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/pulsar_manager?useUnicode=true&characterEncoding=utf-8
+    hikari:
+      username: postgres
+      password: postgres
+  # 虚拟线程开启
+  threads:
+    virtual:
+      enabled: true
+  # thymeleaf
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+  # session有效时间, 30分钟
+  session:
+    timeout: 30m
+
+
+# MybatisPlus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.kingroad.pulsar.entity
+  global-config:
+    db-config:
+      id-type: auto
+      # 逻辑删除字段
+      logic-delete-field: deleted
+      # 逻辑删除的值
+      logic-delete-value: 1
+      # 未逻辑删除的值
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
