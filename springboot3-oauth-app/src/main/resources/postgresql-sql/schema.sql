@@ -90,15 +90,15 @@ INSERT INTO oauth2_registered_client (
     id,client_id,client_secret,client_name,client_authentication_methods,
     authorization_grant_types,redirect_uris,scopes,client_settings,token_settings
 ) VALUES (
-    'client-system-a',
-    'system-a',
+    'client-pulsar-console',
+    'pulsar-console',
     '{bcrypt}$2a$10$xJwL5v1uzT5Z0p2y7tG6KuX7t0Q8r1FzH5j9k0v1X7zY9a1b2c3d4',
     '业务系统A',
     'client_secret_basic',
     'authorization_code,refresh_token,password',
-    'http://127.0.0.1:8081/login/oauth2/code/system-a,http://127.0.0.1:8081',
-    'openid,profile,user:read',
-    '{"settings.requireAuthorizationConsent":false,"settings.jwkSetEndpointEnabled":true}',
+    'http://127.0.0.1:8080',
+    'openid,profile,user:read,offline_access',
+    '{"settings.requireAuthorizationConsent":false,"settings.jwkSetEndpointEnabled":false}',
     '{"accessTokenTimeToLive":3600,"refreshTokenTimeToLive":86400,"reuseRefreshTokens":false}'
 );
 

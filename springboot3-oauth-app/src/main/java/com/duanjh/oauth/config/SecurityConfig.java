@@ -1,6 +1,7 @@
 package com.duanjh.oauth.config;
 
 import com.duanjh.oauth.service.OAuthUserDetailsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -66,7 +67,7 @@ public class SecurityConfig {
                 .oidc(Customizer.withDefaults())
             )
             .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/auth/login")))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
             .csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
@@ -78,18 +79,16 @@ public class SecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/doLogin", "/auth/admin/client/**").permitAll()
+                        .requestMatchers("/login", "/doLogin", "/admin/client/**", "/oauth2/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
 
                 .formLogin(form ->
                         form.loginPage("/login")   // 自定义登录地址
-
-                        .loginProcessingUrl("/doLogin")     // Security内置登录提交地址
+                        .loginProcessingUrl("/doLogin")     // Security内置登录提交地址，无需自己写接口
                         .usernameParameter("username")
                         .passwordParameter("password")
-
-                        .loginProcessingUrl("/auth/doLogin")    // 登录提交地址（无需自己写接口，Security自动处理）
+                        .defaultSuccessUrl("/index")
                         .permitAll()
                         .failureUrl("/login?error=true") // 登录失败跳转回登录页带错误标识
                 )
@@ -155,7 +154,7 @@ public class SecurityConfig {
         return keyPair;
     }
 
-    // 发行者地址
+    // 授权服务地址配置
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()

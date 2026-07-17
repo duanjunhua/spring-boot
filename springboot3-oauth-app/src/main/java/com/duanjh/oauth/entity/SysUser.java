@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "sys_user")
 public class SysUser implements UserDetails {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,7 +46,7 @@ public class SysUser implements UserDetails {
 
     private Boolean accountNonLocked;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "username")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "userId")
     private List<SysAuthority> authorityList;
 
     @Override
