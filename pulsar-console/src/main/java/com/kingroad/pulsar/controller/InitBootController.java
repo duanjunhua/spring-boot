@@ -1,8 +1,10 @@
 package com.kingroad.pulsar.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.kingroad.pulsar.audit.Audit;
 import com.kingroad.pulsar.auth.dto.OauthInitDTO;
 import com.kingroad.pulsar.constant.CommonConst;
+import com.kingroad.pulsar.constant.OperateType;
 import com.kingroad.pulsar.entity.uo.SysUser;
 import com.kingroad.pulsar.res.Result;
 import com.kingroad.pulsar.service.config.SysConfigService;
@@ -37,6 +39,7 @@ public class InitBootController {
         return "init-guide";
     }
 
+    @Audit(module = "系统超级用户初始化", operationType = OperateType.CREATE)
     @PostMapping("/save")
     public String saveInit(@Valid OauthInitDTO dto) {
 
@@ -45,6 +48,7 @@ public class InitBootController {
         return "login";
     }
 
+    @Audit(module = "系统超级用户初始化", operationType = OperateType.CREATE)
     @PostMapping("/save-json")
     @ResponseBody
     public Result<?> saveInitWithJson(@Valid OauthInitDTO dto) {
@@ -67,7 +71,7 @@ public class InitBootController {
         sysUserService.save(admin);
 
         // 保存OAuth配置
-        sysConfigService.saveConfig("oauth_enable", dto.getOauthEnable().toString());
+        sysConfigService.saveConfig(CommonConst.SSO_ENABLE, dto.getOauthEnable().toString());
 
         if(dto.getOauthEnable()) {
             sysConfigService.saveConfig("oauth_client_id", StrUtil.blankToDefault(dto.getClientId(),""));

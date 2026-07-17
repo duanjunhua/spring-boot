@@ -20,8 +20,9 @@
         </div>
         <button type="submit" style="width:100%;padding:10px;margin-top:10px">账号密码登录</button>
     </form>
-    <div th:if="${@sysConfigServiceImpl.getConfigValue('oauth_enable') == '1'}" style="margin-top:20px;text-align:center">
-        <a th:href="@{/oauth2/authorization/sso-custom}" style="padding:10px 20px;background:#28a745;color:white;text-decoration:none">第三方SSO登录</a>
+    <div th:if="${@sysConfigServiceImpl.getConfigValue('sso.enable') == 'true'}" style="margin-top:20px;text-align:center">
+        <!-- pulsar-console为应用名 -->
+        <a th:href="@{/oauth2/authorization/pulsar-console}" style="padding:10px 20px;background:#28a745;color:white;text-decoration:none">第三方SSO登录</a>
     </div>
 </div>
 </body>

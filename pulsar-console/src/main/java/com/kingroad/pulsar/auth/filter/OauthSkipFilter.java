@@ -1,8 +1,12 @@
 package com.kingroad.pulsar.auth.filter;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.kingroad.pulsar.constant.OperateType;
+import com.kingroad.pulsar.entity.core.SysAuditLog;
 import com.kingroad.pulsar.entity.uo.SysUser;
+import com.kingroad.pulsar.service.core.SysAuditLogService;
 import com.kingroad.pulsar.service.uo.SysUserService;
+import com.kingroad.pulsar.util.IpUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 /**
  * @Author: Michael J H Duan[JunHua]
@@ -27,6 +32,9 @@ public class OauthSkipFilter extends OncePerRequestFilter {
     @Resource
     private SysUserService userService;
 
+    @Resource
+    private SysAuditLogService auditLogService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -38,6 +46,18 @@ public class OauthSkipFilter extends OncePerRequestFilter {
             // 超级管理员直接放行，跳过OAuth强制校验
             if(ObjectUtil.isNotNull(user) && user.getIsSuperAdmin()) {
                 filterChain.doFilter(request, response);
+
+
+                SysAuditLog audit = new SysAuditLog();
+
+                audit.setOperatorId(username);
+                audit.setOperationType(OperateType.PC_LOGIN.description());
+                audit.setTargetResource("/doLogin");
+                audit.setSourceIp(IpUtil.getIpAddr(request));
+                audit.setCreateAt(LocalDateTime.now());
+
+                auditLogService.save(audit);
+
                 return;
             }
         }

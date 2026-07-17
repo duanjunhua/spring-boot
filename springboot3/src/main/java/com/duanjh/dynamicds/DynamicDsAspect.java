@@ -36,9 +36,12 @@ public class DynamicDsAspect {
     @Around("aspect()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         String method = joinPoint.getSignature().getName();
+
+        // 如查询使用Slave数据源
         if (method.startsWith("find") || method.startsWith("select") || method.startsWith("query") || method.startsWith("search")) {
             DynamicDs.setDataSource(DsType.SECONDARY);
         } else {
+            // 增改删使用master数据源
             DynamicDs.setDataSource(DsType.PRIMARY);
             log.info("Switch to Primary datasource...");
         }

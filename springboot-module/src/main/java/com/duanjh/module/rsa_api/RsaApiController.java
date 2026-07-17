@@ -38,7 +38,7 @@ public class RsaApiController {
 
     @Decrypt
     @PostMapping(value = "/decrypt")
-    public Object decrypt(@RequestBody Object data){
+    public Object decrypt(@RequestBody Map<String, Object> data){
         log.info("解密的加密数据：{}", data);
         return data;
     }

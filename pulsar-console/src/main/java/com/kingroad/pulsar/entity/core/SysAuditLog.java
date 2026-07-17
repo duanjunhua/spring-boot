@@ -1,10 +1,13 @@
 package com.kingroad.pulsar.entity.core;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import org.apache.ibatis.type.JdbcType;
 
+import java.net.InetAddress;
 import java.time.LocalDateTime;
 
 /**
@@ -28,7 +31,7 @@ public class SysAuditLog {
     /**
      * 操作类型 (如 CREATE_TOPIC，DELETE_EVENT)
      */
-    private String operatorType;
+    private String operationType;
 
     /**
      * 操作⽬标资源 (如topic://public/default/order)
@@ -43,7 +46,13 @@ public class SysAuditLog {
     /**
      * 操作来源IP
      */
+
     private String sourceIp;
+
+    /**
+     * 请求参数
+     */
+    private String params;
 
     /**
      * 创建时间

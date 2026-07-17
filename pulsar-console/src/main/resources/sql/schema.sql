@@ -20,12 +20,12 @@ COMMENT ON COLUMN t_global_config.update_at IS '更新时间';
 -- 预置key说明
     -- init_admin_flag：是否已完成初始化引导 0未初始化 1已初始化
     -- admin_initial_pwd：初始化设置的超级管理员密码（加密存储）
-    -- oauth_enable：是否开启第三方SSO 0关闭 1开启
-    -- oauth_client_id：OAuth客户端ID
-    -- oauth_client_secret：OAuth客户端密钥
-    -- oauth_authorization_uri：授权地址
-    -- oauth_token_uri：token地址
-    -- oauth_userinfo_uri：用户信息获取地址
+    -- sso.enable：true/false 是否开启第三方OAuth2 SSO
+    -- oauth.client_id：第三方客户端ID
+    -- oauth.client_secret：客户端密钥
+    -- oauth.authorization_uri：授权地址
+    -- oauth.token_uri：令牌地址
+    -- oauth.user_info_uri：用户信息获取地址
     -- oauth_redirect_uri：回调地址
 
 CREATE TABLE t_pulsar_cluster (
@@ -58,6 +58,7 @@ CREATE TABLE t_user (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(64) NOT NULL UNIQUE,
     username VARCHAR(128) NOT NULL,
+    chinese_name VARCHAR(256) DEFAULT NULL,
     tenant_name VARCHAR(32) NOT NULL,
     pulsar_cluster_id BIGINT NOT NULL,
     is_super_admin BOOLEAN NOT NULL DEFAULT FALSE,
@@ -73,6 +74,7 @@ comment on table t_user is '⽤⼾表';
 COMMENT ON COLUMN t_user.id IS '主键';
 COMMENT ON COLUMN t_user.user_id IS '配SSO 平台的唯⼀⽤⼾ID';
 COMMENT ON COLUMN t_user.username IS '⽤⼾显⽰名';
+COMMENT ON COLUMN t_user.username IS '⽤⼾中文名';
 COMMENT ON COLUMN t_user.tenant_name IS '对应 Pulsar 租⼾名，全局唯⼀';
 COMMENT ON COLUMN t_user.pulsar_cluster_id IS '关联的 Pulsar 集群ID (外键)';
 COMMENT ON COLUMN t_user.is_super_admin IS '是否为超级管理员，TRUE: 超级管理员 FALSE: 普通用户';
@@ -229,8 +231,9 @@ CREATE TABLE t_audit_log (
     operation_type VARCHAR(64) NOT NULL,
     target_resource VARCHAR(256) NOT NULL,
     details JSONB DEFAULT NULL,
-    source_ip INET NOT NULL,
-    create_at TIMESTAMP DEFAULT NOW(),
+    params TEXt DEFAULT NULL,
+    source_ip VARCHAR(256) NOT NULL,
+    create_at TIMESTAMP DEFAULT NOW()
 );
 comment on table t_audit_log is '审计⽇志表';
 COMMENT ON COLUMN t_audit_log.id IS '主键';
@@ -238,6 +241,7 @@ COMMENT ON COLUMN t_audit_log.operator_id IS '操作⼈ID（SSO ID）';
 COMMENT ON COLUMN t_audit_log.operation_type IS '操作类型 (如 CREATE_TOPIC，DELETE_EVENT)';
 COMMENT ON COLUMN t_audit_log.target_resource IS '操作⽬标资源 (如topic://public/default/order)';
 COMMENT ON COLUMN t_audit_log.details IS '操作详情 (变更前/后内容等)';
+COMMENT ON COLUMN t_audit_log.params IS '请求参数';
 COMMENT ON COLUMN t_audit_log.source_ip IS '操作来源IP';
 COMMENT ON COLUMN t_audit_log.create_at IS '操作时间';
 

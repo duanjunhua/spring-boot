@@ -31,6 +31,11 @@ public class SysUser {
     private String username;
 
     /**
+     * ⽤⼾中文名
+     */
+    private String chineseName;
+
+    /**
      * 对应 Pulsar 租⼾名，全局唯⼀
      */
     private String tenantName;

@@ -21,7 +21,6 @@ public class Md5PasswordEncoder implements PasswordEncoder {
 
     @Override
     public boolean matches(CharSequence password, String encodedPassword) {
-        log.info("密码：{}，加密密码：{}", DigestUtils.md5Hex(password.toString()), encodedPassword);
         return encodedPassword.equals(DigestUtils.md5Hex(password.toString()));
     }
 
