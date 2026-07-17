@@ -1,0 +1,38 @@
+server:
+  port: 9000 # SSO认证中心端口
+  servlet:
+    context-path: /auth
+
+spring:
+  # PostgreSQL16配置
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/sso_auth?useUnicode=true&characterEncoding=utf8
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: none # 手动执行SQL建表，禁止自动更新表
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Redis会话共享配置
+  data:
+    redis:
+      port: 6379
+      password: 123456
+      database: 5
+      host: 127.0.0.1
+
+  thymeleaf:
+    # 开发关闭页面缓存
+    cache: false
+
+# 日志
+logging:
+  level:
+    org.springframework.security: debug
+    org.springframework.security.oauth2: debug
