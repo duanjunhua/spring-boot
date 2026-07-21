@@ -59,9 +59,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         // 批量新增
         List<SysUserRole> list = new ArrayList<>();
         for(Long rid : roleIdList){
-            SysUserRole ur = new SysUserRole();
-            ur.setUserId(userId);
-            ur.setRoleId(rid);
+            SysUserRole ur = SysUserRole.builder().userId(userId).roleId(rid).build();
             list.add(ur);
         }
         userRoleMapper.batchInsert(list);

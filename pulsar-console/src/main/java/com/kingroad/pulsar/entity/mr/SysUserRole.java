@@ -3,6 +3,7 @@ package com.kingroad.pulsar.entity.mr;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
  * @Description: ⽤⼾⻆⾊关联
  */
 @Data
+@Builder
 @TableName("t_user_role")
 public class SysUserRole {
 
