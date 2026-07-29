@@ -2,6 +2,8 @@ package com.kingroad.pulsar.util;
 
 import cn.hutool.core.util.ObjectUtil;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -88,6 +90,10 @@ public class EncryptUtil {
     }
 
     public static void main(String[] args) {
-        System.out.println(sha("123456", SHA.SHA256.name()));
+//        System.out.println(sha("123456", SHA.SHA256.name()));
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        System.out.println(passwordEncoder.encode("admin123"));
+
     }
 }
