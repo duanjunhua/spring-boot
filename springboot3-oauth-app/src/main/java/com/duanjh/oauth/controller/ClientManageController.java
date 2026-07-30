@@ -49,9 +49,9 @@ public class ClientManageController {
     @PostMapping("/add")
     public ResponseEntity<?> addClient(@RequestBody ClientDTO dto) {
         // 加密客户端密钥
-        String encodeSecret = "{bcrypt}" + passwordEncoder.encode(dto.getClientSecret());
+        String encodeSecret = passwordEncoder.encode(dto.getClientSecret());
 
-        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+        RegisteredClient registeredClient = RegisteredClient.withId("local_sso")
                 .clientId(dto.getClientId())
                 .clientSecret(encodeSecret)
                 .clientName(dto.getClientName())
@@ -60,12 +60,14 @@ public class ClientManageController {
                 // 授权模式：授权码、刷新令牌、密码模式（内网可信系统）
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .authorizationGrantType(AuthorizationGrantType.PASSWORD)
                 // 回调地址，多地址逗号分隔
                 .redirectUri(dto.getRedirectUri())
                 // 授权范围 openid必带，OIDC标准
                 .scope("openid")
                 .scope("profile")
+                .scope("user:read")
                 .scope(dto.getScope())
                 // 客户端配置：无需手动授权确认
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
