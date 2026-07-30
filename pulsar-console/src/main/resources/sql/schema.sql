@@ -74,7 +74,7 @@ comment on table t_user is '⽤⼾表';
 COMMENT ON COLUMN t_user.id IS '主键';
 COMMENT ON COLUMN t_user.user_id IS '配SSO 平台的唯⼀⽤⼾ID';
 COMMENT ON COLUMN t_user.username IS '⽤⼾显⽰名';
-COMMENT ON COLUMN t_user.username IS '⽤⼾中文名';
+COMMENT ON COLUMN t_user.chinese_name IS '⽤⼾中文名';
 COMMENT ON COLUMN t_user.tenant_name IS '对应 Pulsar 租⼾名，全局唯⼀';
 COMMENT ON COLUMN t_user.pulsar_cluster_id IS '关联的 Pulsar 集群ID (外键)';
 COMMENT ON COLUMN t_user.is_super_admin IS '是否为超级管理员，TRUE: 超级管理员 FALSE: 普通用户';
@@ -118,7 +118,7 @@ CREATE TABLE t_role (
     create_at TIMESTAMP DEFAULT NOW(),
     update_at TIMESTAMP DEFAULT NOW()
 );
-comment on table t_role is '权限表';
+comment on table t_role is '角色表';
 COMMENT ON COLUMN t_role.id IS '主键';
 COMMENT ON COLUMN t_role.role_name IS '⻆⾊名称（如“系统管理员”、“运维⼈员”、“只读访客”）';
 COMMENT ON COLUMN t_role.role_code IS '⻆⾊唯⼀标识码（如 admin , operator ），⽤于程序逻辑判断';
