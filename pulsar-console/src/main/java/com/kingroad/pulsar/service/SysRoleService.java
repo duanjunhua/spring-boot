@@ -66,6 +66,13 @@ public class SysRoleService {
     }
 
     /**
+     * 根据ID获取对象
+     */
+    public SysRole findEntityByRoleCode(String roleCode) {
+        return repository.findByRoleCode(roleCode);
+    }
+
+    /**
      * 根据用户ID查询用户角色集合
      * @param userId 用户ID
      */

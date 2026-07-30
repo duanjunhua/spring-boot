@@ -40,8 +40,6 @@ public class LocalUserDetailService implements UserDetailsService {
 
         if(StringUtils.isNoneBlank(u.getSsoId())) throw new BusinessException("请通过第三方SSO登录");
 
-
-
         return new UserDetails() {
             @Override
             public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -24,9 +24,8 @@
         <div style="margin:20px 0;text-align:center;color:#999;">———— 第三方单点登录 ————</div>
 
         <!-- OAuth2三方登录按钮：跳转授权地址 -->
-        <div align="center" th:if="${@globalConfigService.findValByConfigKey('sso.enable') == '1'}">
-            <!-- @{/oauth2/authorization/custom-sso} -->
-            <a th:href="${@globalConfigService.findValByConfigKey('ssoUrl')}">
+        <div align="center" th:if="${ssoEnable}">
+            <a th:href="@{/oauth2/authorization/{id}(id=${registrationId})}">
                 <el-button type="success">SSO登录</el-button>
             </a>
         </div>

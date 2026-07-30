@@ -1,16 +1,24 @@
-package com.kingroad.pulsar.authorization;
+package com.kingroad.pulsar.authorization.sso;
 
+import com.kingroad.pulsar.domain.entity.SysRole;
 import com.kingroad.pulsar.domain.entity.SysUser;
+import com.kingroad.pulsar.domain.entity.SysUserRole;
+import com.kingroad.pulsar.repository.SysUserRoleRepository;
+import com.kingroad.pulsar.service.SysRoleService;
 import com.kingroad.pulsar.service.SysUserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * @Author: Michael J H Duan[JunHua]
@@ -24,6 +32,12 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
     @Resource
     SysUserService service;
+
+    @Resource
+    SysUserRoleRepository urRepository;
+
+    @Resource
+    SysRoleService roleService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -44,15 +58,31 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         if (sysUser == null) {
             // 自动新建用户
             SysUser u = new SysUser();
-            u.setUsername("oauth_" + UUID.randomUUID().toString().substring(0,12));
-            u.setPasswordHash("");
+            u.setSsoId(oauthUserId);
+            u.setUsername("sso_" + oauthUserId);
             u.setChineseName(nickname);
             u.setEmail(email);
-            u.setSsoId(oauthUserId);
             u.setEnable(true);
             sysUser = service.saveOrUpdate(u);
+
+            // 给予用户普通角色
+            SysRole role = roleService.findEntityByRoleCode("ROLE_USER");
+            if(ObjectUtils.isNotEmpty(role)){
+                SysUserRole sysUserRole = new SysUserRole();
+                sysUserRole.setRoleId(role.getId());
+                sysUserRole.setUserId(sysUser.getId());
+                urRepository.save(sysUserRole);
+            }
+            sysUser.setRoleList(Arrays.asList(role));
         }
 
-        return oAuth2User;
+        // 把用户权限封装成OAuth2User，供Security上下文使用
+        return new DefaultOAuth2User(
+                sysUser.getRoleList().stream().map(SysRole::getRoleCode)
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList()),
+                oAuth2User.getAttributes(),
+                oauthUserId
+        );
     }
 }

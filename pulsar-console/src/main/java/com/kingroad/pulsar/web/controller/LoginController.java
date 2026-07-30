@@ -1,5 +1,9 @@
 package com.kingroad.pulsar.web.controller;
 
+import com.kingroad.pulsar.authorization.sso.SsoConst;
+import com.kingroad.pulsar.service.GlobalConfigService;
+import jakarta.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +18,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class LoginController {
 
+    @Resource
+    GlobalConfigService configService;
+
     // 跳转登录页面
     @GetMapping("/login")
-    public String loginPage() {
+    public String loginPage(Model model) {
+
+        String ssoEnable = configService.findValByConfigKey(SsoConst.SSO_ENABLE);
+        model.addAttribute("ssoEnable", StringUtils.equals(ssoEnable, SsoConst.ACTIVE));
+
+        String ssoRigistrationId = configService.findValByConfigKey(SsoConst.REGISTRATION_ID);
+        model.addAttribute("registrationId", ssoRigistrationId);
         return "login";
     }
 
