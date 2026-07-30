@@ -38,6 +38,13 @@ public class ClientCredentialService {
     }
 
     /**
+     * 新增修改对象
+     */
+    public ClientCredential saveOrUpdate(ClientCredential entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 根据ID获取对象
      */
     public ClientCredential findEntityById(Long id) {

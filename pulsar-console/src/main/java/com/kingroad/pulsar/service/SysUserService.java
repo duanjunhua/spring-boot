@@ -57,6 +57,13 @@ public class SysUserService {
     }
 
     /**
+     * 新增修改用户
+     */
+    public SysUser saveOrUpdate(SysUser entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 根据ID获取对象
      */
     public SysUser findEntityById(Long id) {
@@ -67,7 +74,7 @@ public class SysUserService {
             u.setRoleList(roleService.findByUserId(u.getId()));
             return u;
         }
-        throw new BusinessException("查询内容不存在");
+        return null;
     }
 
     /**
@@ -76,7 +83,7 @@ public class SysUserService {
      */
     public SysUser findEntityByUsername(String username) {
         SysUser u = repository.findByUsername(username);
-        if(ObjectUtils.isEmpty(u)) throw new BusinessException("查询内容不存在");
+        if(ObjectUtils.isEmpty(u)) return null;
 
         u.setResList(resService.findByUserId(u.getId()));
         u.setRoleList(roleService.findByUserId(u.getId()));
@@ -90,7 +97,7 @@ public class SysUserService {
     public SysUser findEntityBySsoId(String ssoId) {
         SysUser u = repository.findBySsoId(ssoId);
 
-        if(ObjectUtils.isEmpty(u)) throw new BusinessException("查询内容不存在");
+        if(ObjectUtils.isEmpty(u)) return null;
 
         u.setResList(resService.findByUserId(u.getId()));
         u.setRoleList(roleService.findByUserId(u.getId()));

@@ -6,6 +6,9 @@ server:
 spring:
   application:
     name: pulsar-console
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/js/,classpath:/element/,classpath:/css/
 
   datasource:
     url: jdbc:postgresql://localhost:5432/pulsar_console

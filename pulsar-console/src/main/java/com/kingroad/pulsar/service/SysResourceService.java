@@ -57,6 +57,13 @@ public class SysResourceService {
     }
 
     /**
+     * 新增修改对象
+     */
+    public SysResource saveOrUpdate(SysResource entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 获取所有
      */
     public List<SysResource> findAll(){

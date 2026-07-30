@@ -38,6 +38,13 @@ public class EventDefinitionService {
     }
 
     /**
+     * 新增修改对象
+     */
+    public EventDefinition saveOrUpdate(EventDefinition entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 根据ID获取对象
      */
     public EventDefinition findEntityById(Long id) {

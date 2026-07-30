@@ -12,4 +12,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface GlobalConfigRepository extends JpaRepository<GlobalConfig,Long> {
+
+    GlobalConfig findByConfigKey(String configKey);
+
 }

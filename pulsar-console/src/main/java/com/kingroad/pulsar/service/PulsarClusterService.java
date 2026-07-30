@@ -38,6 +38,13 @@ public class PulsarClusterService {
     }
 
     /**
+     * 新增修改对象
+     */
+    public PulsarCluster saveOrUpdate(PulsarCluster entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 根据ID获取对象
      */
     public PulsarCluster findEntityById(Long id) {

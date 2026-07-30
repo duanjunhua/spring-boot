@@ -1,7 +1,6 @@
 package com.kingroad.pulsar.service;
 
 import com.kingroad.pulsar.common.PageResult;
-import com.kingroad.pulsar.domain.entity.SysResource;
 import com.kingroad.pulsar.domain.entity.SysRole;
 import com.kingroad.pulsar.domain.entity.SysUserRole;
 import com.kingroad.pulsar.exception.BusinessException;
@@ -43,6 +42,13 @@ public class SysRoleService {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         Page<SysRole> page = repository.findAll(pageable);
         return PageResult.of(page.getContent(), page.getTotalElements(), pageNum, pageSize);
+    }
+
+    /**
+     * 新增修改对象
+     */
+    public SysRole saveOrUpdate(SysRole entity) {
+        return repository.save(entity);
     }
 
     /**

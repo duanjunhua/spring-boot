@@ -38,6 +38,13 @@ public class AuditLogService {
     }
 
     /**
+     * 新增修改对象
+     */
+    public AuditLog saveOrUpdate(AuditLog entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 根据ID获取对象
      */
     public AuditLog findEntityById(Long id) {

@@ -7,6 +7,9 @@ import com.kingroad.pulsar.exception.BusinessException;
 import com.kingroad.pulsar.repository.GlobalConfigRepository;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +43,13 @@ public class GlobalConfigService {
     }
 
     /**
+     * 新增修改对象
+     */
+    public GlobalConfig saveOrUpdate(GlobalConfig entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 根据ID获取对象
      */
     public GlobalConfig findEntityById(Long id) {
@@ -51,6 +61,37 @@ public class GlobalConfigService {
      */
     public List<GlobalConfig> findAll(){
         return repository.findAll();
+    }
+
+    /**
+     * 根据对象查询
+     */
+    public List<GlobalConfig> getUniqueGlobalConfig(GlobalConfig entity) {
+
+        if(ObjectUtils.isEmpty(entity)) return null;
+
+        Example<GlobalConfig> condition = Example.of(entity);
+
+        return repository.findAll(condition);
+    }
+
+    /**
+     * 根据属性查找
+     */
+    public GlobalConfig findEntityByConfigKey(String  configKey) {
+        return repository.findByConfigKey(configKey);
+    }
+
+    /**
+     * 根据属性查找
+     */
+    public String findValByConfigKey(String  configKey) {
+
+        GlobalConfig config = repository.findByConfigKey(configKey);
+
+        if(ObjectUtils.isEmpty(config)) return StringUtils.EMPTY;
+
+        return config.getConfigValue();
     }
 
 }

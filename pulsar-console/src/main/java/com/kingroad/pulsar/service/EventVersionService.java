@@ -38,6 +38,13 @@ public class EventVersionService {
     }
 
     /**
+     * 新增修改对象
+     */
+    public EventVersion saveOrUpdate(EventVersion entity) {
+        return repository.save(entity);
+    }
+
+    /**
      * 根据ID获取对象
      */
     public EventVersion findEntityById(Long id) {
