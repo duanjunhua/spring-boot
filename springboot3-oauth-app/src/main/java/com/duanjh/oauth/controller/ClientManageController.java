@@ -51,7 +51,7 @@ public class ClientManageController {
         // 加密客户端密钥
         String encodeSecret = passwordEncoder.encode(dto.getClientSecret());
 
-        RegisteredClient registeredClient = RegisteredClient.withId("local_sso")
+        RegisteredClient registeredClient = RegisteredClient.withId(dto.getRegistrationId())
                 .clientId(dto.getClientId())
                 .clientSecret(encodeSecret)
                 .clientName(dto.getClientName())

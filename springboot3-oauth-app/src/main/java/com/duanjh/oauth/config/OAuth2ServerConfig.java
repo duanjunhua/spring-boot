@@ -87,7 +87,7 @@ public class OAuth2ServerConfig {
 
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/doLogin", "/admin/client/**", "/oauth2/**", "/error").permitAll()
+                        .requestMatchers("/login", "/.well-known/**", "/doLogin", "/admin/client/**", "/oauth2/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
 

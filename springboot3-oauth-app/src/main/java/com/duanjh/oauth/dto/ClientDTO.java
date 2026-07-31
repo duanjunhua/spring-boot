@@ -11,6 +11,12 @@ import lombok.Data;
 @Data
 public class ClientDTO {
 
+    private String registrationId;
+    private String email;
+    private String password;
+    private String firstName;
+    private String lastName;
+
     private String clientId;
 
     private String clientSecret;
