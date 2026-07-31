@@ -40,6 +40,7 @@ public class ClientCredentialService {
     /**
      * 新增修改对象
      */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
     public ClientCredential saveOrUpdate(ClientCredential entity) {
         return repository.save(entity);
     }

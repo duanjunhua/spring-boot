@@ -47,6 +47,7 @@ public class SysRoleService {
     /**
      * 新增修改对象
      */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
     public SysRole saveOrUpdate(SysRole entity) {
         return repository.save(entity);
     }

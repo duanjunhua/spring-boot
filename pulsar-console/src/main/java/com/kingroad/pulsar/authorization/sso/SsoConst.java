@@ -96,4 +96,16 @@ public class SsoConst {
      * 默认授权范围
      */
     public static final String DEFAULT_SCOPE = "openid,profile,user:read";
+
+    /**
+     * SSO /userinfo拉取用户
+     */
+    public static final String USERINFO_ENDPOINT_ENABLED = "userinfo_endpoint_enabled";
+
+    /**
+     * SSO客户端属性
+     */
+    public static final String ATTR_SUB = "sub";
+    public static final String ATTR_NAME = "name";
+    public static final String ATTR_EMAIL = "email";
 }

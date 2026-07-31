@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @Author: Michael J H Duan[JunHua]
  * @Date: 2026-07-30 周四 11:23
  * @Version: v1.0
- * @Description: OAuth2 登录处理器：第三方登录自动注册、绑定本地账号
+ * @Description: OAuth2 登录处理器：第三方登录自动注册、绑定本地账号，与OidcUserService二选一即可
  */
 @Slf4j
 @Service
@@ -48,21 +48,16 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
         // 获取三方用户唯一标识 oid
-        String oauthUserId = oAuth2User.getAttribute("sub");
-        String nickname = oAuth2User.getAttribute("name");
-        String email = oAuth2User.getAttribute("email");
+        String oauthUserId = oAuth2User.getAttribute(SsoConst.ATTR_SUB);
+        String nickname = oAuth2User.getAttribute(SsoConst.ATTR_NAME);
+        String email = oAuth2User.getAttribute(SsoConst.ATTR_EMAIL);
 
         // 查询是否已有绑定账号
         SysUser sysUser = service.findEntityBySsoId(oauthUserId);
 
         if (sysUser == null) {
             // 自动新建用户
-            SysUser u = new SysUser();
-            u.setSsoId(oauthUserId);
-            u.setUsername("sso_" + oauthUserId);
-            u.setChineseName(nickname);
-            u.setEmail(email);
-            u.setEnable(true);
+            SysUser u = SysUser.buildSsoUser(oauthUserId, email, nickname);
             sysUser = service.saveOrUpdate(u);
 
             // 给予用户普通角色

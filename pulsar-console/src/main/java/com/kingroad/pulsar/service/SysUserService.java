@@ -59,6 +59,7 @@ public class SysUserService {
     /**
      * 新增修改用户
      */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
     public SysUser saveOrUpdate(SysUser entity) {
         return repository.save(entity);
     }

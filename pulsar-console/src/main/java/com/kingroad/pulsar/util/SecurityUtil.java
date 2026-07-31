@@ -1,6 +1,10 @@
 package com.kingroad.pulsar.util;
 
+import com.kingroad.pulsar.authorization.sso.SysOidcUser;
+import com.kingroad.pulsar.domain.entity.SysUser;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -10,33 +14,35 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class SecurityUtil {
 
     /**
-     * 获取当前登录用户名
+     * 获取当前登录完整本地用户
      */
-    public static String getCurrentUsername() {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes != null) {
-            HttpServletRequest request = attributes.getRequest();
-            Object username = request.getAttribute("currentUsername");
-            if (username != null) {
-                return username.toString();
-            }
+    public static SysUser getLoginUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return null;
         }
-        return "system";
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof SysOidcUser oidcUser) {
+            return oidcUser.getSysUser();
+        }
+        return new SysUser();
+    }
+
+
+    /**
+     * 获取当前登录用户ID
+     */
+    public static Long getUserId() {
+        SysUser user = getLoginUser();
+        return user == null ? null : user.getId();
     }
 
     /**
-     * 获取当前用户ID
+     * 获取登录账号名
      */
-    public static Long getCurrentUserId() {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes != null) {
-            HttpServletRequest request = attributes.getRequest();
-            Object userId = request.getAttribute("currentUserId");
-            if (userId != null) {
-                return Long.valueOf(userId.toString());
-            }
-        }
-        return null;
+    public static String getUsername() {
+        SysUser user = getLoginUser();
+        return user == null ? null : user.getUsername();
     }
 
     /**

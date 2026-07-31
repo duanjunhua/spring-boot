@@ -1,6 +1,7 @@
 package com.kingroad.pulsar.authorization;
 
 import com.kingroad.pulsar.authorization.sso.OAuth2UserService;
+import com.kingroad.pulsar.authorization.sso.OAuthOidcUserService;
 import com.kingroad.pulsar.authorization.sso.SsoClientRegistrationRepository;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +29,9 @@ public class SecurityConfig {
 
     // 第三方SSO登录
     @Resource
-    OAuth2UserService oAuth2UserService;
+    OAuth2UserService oAuth2UserService;    // 通过SSO 服务/userinfo 端点获取用户信息
+    @Resource
+    OAuthOidcUserService oidcUserService;   // 通过id_token解析用户信息，与oAuth2UserService二选一即可
     @Resource
     SsoClientRegistrationRepository ssoClientRegistrationRepository;
 
@@ -63,7 +66,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                     // 放行自定义登录页面、静态资源(css/js/img)、验证码等
-                    .requestMatchers("/login", "/doLogin","/css/**", "/element/**", "/js/**").permitAll()
+                    .requestMatchers("/login", "/login/auth/**", "/doLogin","/css/**", "/element/**", "/js/**").permitAll()
                     // 其余所有接口必须登录认证
                     .anyRequest().authenticated()
             )
@@ -80,10 +83,28 @@ public class SecurityConfig {
             )
             // 第三方用户SSO登录
             .oauth2Login(oauth2 -> oauth2
-                    .loginPage("/login")
-                    .clientRegistrationRepository(ssoClientRegistrationRepository)
-                    .userInfoEndpoint(u -> u.userService(oAuth2UserService))
-                    .defaultSuccessUrl("/index", true)
+                .loginPage("/login")
+                .clientRegistrationRepository(ssoClientRegistrationRepository)
+
+                // jwt模式从id_token获取用户信息
+                .userInfoEndpoint(u -> u.oidcUserService(oidcUserService))
+
+                // 配置从/userinfo获取用户信息
+                //.userInfoEndpoint(u -> u.userService(oAuth2UserService))
+                .defaultSuccessUrl("/index", true)
+            )
+            .logout(logout -> logout
+                // 自定义登出请求地址，前端访问 /logout 触发登出
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                // 1. 销毁当前Session
+                .invalidateHttpSession(true)
+                // 2. 清除Security上下文（SecurityContextHolder）
+                .clearAuthentication(true)
+                // 3. 删除Cookie，可添加多个（JSESSIONID、记住我cookie等）
+                .deleteCookies("JSESSIONID")
+                // 放行登出接口，无需认证即可访问
+                .permitAll()
             );
         return http.build();
     }

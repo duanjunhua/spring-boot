@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.domain.entity;
 
+import com.kingroad.pulsar.common.CommonConst;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -93,5 +94,18 @@ public class SysUser extends BaseAuditEntity{
      */
     @Transient
     private List<SysResource> resList;
+
+    public static SysUser buildSsoUser(String authSsoId, String nickname, String email) {
+        SysUser u = new SysUser();
+        u.setSsoId(authSsoId);
+        u.setUsername("sso_" + authSsoId);
+        u.setChineseName(nickname);
+        u.setEmail(email);
+        u.setEnable(true);
+        u.setPasswordHash("");
+        u.setTenantName(CommonConst.DEFAULT_TENANT);
+        u.setClusterId(CommonConst.DEFAULT_CLUSTER_ID);
+        return u;
+    }
 
 }

@@ -40,6 +40,7 @@ public class PulsarClusterService {
     /**
      * 新增修改对象
      */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
     public PulsarCluster saveOrUpdate(PulsarCluster entity) {
         return repository.save(entity);
     }

@@ -45,6 +45,7 @@ public class GlobalConfigService {
     /**
      * 新增修改对象
      */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
     public GlobalConfig saveOrUpdate(GlobalConfig entity) {
         return repository.save(entity);
     }

@@ -46,7 +46,8 @@ logging:
   level:
     root: INFO
     com.pulsar.console: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
     org.apache.pulsar: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

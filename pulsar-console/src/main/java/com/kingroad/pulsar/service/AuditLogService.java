@@ -40,6 +40,7 @@ public class AuditLogService {
     /**
      * 新增修改对象
      */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
     public AuditLog saveOrUpdate(AuditLog entity) {
         return repository.save(entity);
     }

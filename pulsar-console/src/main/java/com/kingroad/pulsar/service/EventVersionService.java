@@ -40,6 +40,7 @@ public class EventVersionService {
     /**
      * 新增修改对象
      */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
     public EventVersion saveOrUpdate(EventVersion entity) {
         return repository.save(entity);
     }

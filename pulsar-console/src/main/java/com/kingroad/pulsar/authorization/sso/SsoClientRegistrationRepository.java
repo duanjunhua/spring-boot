@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -87,6 +89,14 @@ public class SsoClientRegistrationRepository implements ClientRegistrationReposi
         if (StringUtils.isNoneBlank(jwtUri)) {
             builder.jwkSetUri(jwtUri);
         }
+
+        /**
+         * 配置强制登录使用/userinfo接口拉取用户信息，否则自定义的OAuth2UserService不生效
+         * 默认会使用id_token解析用户（即通过OidcUserService解析），关闭id_token优先解析
+         */
+        Map<String, Object> configuration = new HashMap<>();
+        configuration.put(SsoConst.USERINFO_ENDPOINT_ENABLED, true);
+        builder.providerConfigurationMetadata(configuration);
 
         return builder.build();
     }
