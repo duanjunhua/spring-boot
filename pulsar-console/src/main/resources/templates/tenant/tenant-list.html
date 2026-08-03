@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>租户管理</title>
+    <!-- Vue2 -->
+    <script th:src="@{/element/vue.js}"></script>
+    <!-- ElementUI CSS+JS -->
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <!-- jQuery 3.7 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <style>
+        .toolbar {margin: 15px 0;}
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="toolbar">
+        <el-button type="primary" icon="el-icon-plus" @click="openAdd">新增租户</el-button>
+    </div>
+
+    <!-- 租户表格 -->
+    <el-table :data="tableData" border stripe style="width: 100%">
+        <el-table-column label="ID" prop="id" width="70"></el-table-column>
+        <el-table-column label="租户编码" prop="tenantCode"></el-table-column>
+        <el-table-column label="租户名称" prop="tenantName"></el-table-column>
+        <el-table-column label="是否默认">
+            <template slot-scope="scope">
+                <el-tag v-if="scope.row.isDefault" type="success">默认租户</el-tag>
+                <span v-else>-</span>
+            </template>
+        </el-table-column>
+        <el-table-column label="启用状态">
+            <template slot-scope="scope">
+                <el-switch
+                        v-model="scope.row.isActive"
+                        @change="handleActiveChange(scope.row)"
+                ></el-switch>
+            </template>
+        </el-table-column>
+        <el-table-column label="描述" prop="description" show-overflow-tooltip></el-table-column>
+        <el-table-column label="创建时间" prop="createAt" width="180"></el-table-column>
+        <el-table-column label="操作" width="320">
+            <template slot-scope="scope">
+                <el-button size="mini" @click="openEdit(scope.row)">编辑</el-button>
+                <el-button size="mini" type="success" @click="setDefaultTenant(scope.row)" v-if="!scope.row.isDefault">设为默认</el-button>
+                <el-button size="mini" type="danger" @click="delTenant(scope.row)">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+
+    <!-- 分页控件 -->
+    <el-pagination
+            @size-change="sizeChange"
+            @current-change="currentChange"
+            :current-page="pageNum"
+            :page-sizes="[10,20,50]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            style="margin-top:15px;text-align:right;"
+    ></el-pagination>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="620px">
+        <el-form ref="form" :model="form" label-width="120px" :rules="rules">
+            <el-form-item label="租户编码" prop="tenantCode">
+                <el-input v-model="form.tenantCode" placeholder="例如：zevent、default"></el-input>
+            </el-form-item>
+            <el-form-item label="租户名称" prop="tenantName">
+                <el-input v-model="form.tenantName" placeholder="例如：系统默认租户"></el-input>
+            </el-form-item>
+            <el-form-item label="租户描述">
+                <el-input v-model="form.description" type="textarea" rows="3"></el-input>
+            </el-form-item>
+            <el-form-item label="默认租户">
+                <el-switch v-model="form.isDefault" active-text="是" inactive-text="否"></el-switch>
+            </el-form-item>
+            <el-form-item label="是否启用">
+                <el-switch v-model="form.isActive" active-text="启用" inactive-text="停用"></el-switch>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submit">确定保存</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                // 分页参数
+                pageNum: 1,
+                pageSize: 10,
+                total: 0,
+                tableData: [],
+
+                // 弹窗控制
+                dialogVisible: false,
+                dialogTitle: "新增租户",
+                isEdit: false,
+
+                // 表单数据
+                form: {
+                    id: null,
+                    tenantCode: "",
+                    tenantName: "",
+                    description: "",
+                    isDefault: false,
+                    isActive: true
+                },
+
+                // 表单校验规则
+                rules: {
+                    tenantCode: [
+                        {required: true, message: '请填写租户编码', trigger: 'blur'}
+                    ],
+                    tenantName: [
+                        {required: true, message: '请填写租户名称', trigger: 'blur'}
+                    ]
+                }
+            }
+        },
+        mounted() {
+            this.loadData();
+        },
+        methods: {
+            // 加载表格数据
+            loadData() {
+                const vm = this;
+                $.get("/pulsar-tenant/page", {
+                    pageNum: vm.pageNum,
+                    pageSize: vm.pageSize
+                }, res => {
+                    vm.tableData= res.data.content;
+                    vm.total = res.totalElements;
+                })
+            },
+
+            // 每页条数切换
+            sizeChange(val) {
+                this.pageSize = val;
+                this.pageNum = 1;
+                this.loadData();
+            },
+            // 页码切换
+            currentChange(val) {
+                this.pageNum = val;
+                this.loadData();
+            },
+
+            // 打开新增弹窗
+            openAdd() {
+                this.dialogTitle = "新增租户";
+                this.isEdit = false;
+                this.form = {
+                    id: null,
+                    tenantCode: "",
+                    tenantName: "",
+                    description: "",
+                    isDefault: false,
+                    isActive: true
+                };
+                this.dialogVisible = true;
+                this.$nextTick(()=>{
+                    this.$refs.form.clearValidate();
+                })
+            },
+
+            // 打开编辑弹窗
+            openEdit(row) {
+                const vm = this;
+                $.get("/pulsar-tenant/get/" + row.id, res => {
+                    if(res.code === 200){
+                        vm.form = res.data;
+                        vm.dialogTitle = "编辑租户";
+                        vm.isEdit = true;
+                        vm.dialogVisible = true;
+                        vm.$nextTick(()=>{
+                            vm.$refs.form.clearValidate();
+                        })
+                    }else{
+                        vm.$message.error(res.msg);
+                    }
+                })
+            },
+
+            // 提交表单
+            submit() {
+                const vm = this;
+                this.$refs.form.validate(valid => {
+                    if(!valid) return;
+                    let url = vm.isEdit ? "/pulsar-tenant/edit/" + vm.form.id : "/pulsar-tenant/save";
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        contentType: "application/json;charset=utf-8",
+                        data: JSON.stringify(vm.form),
+                        success: res => {
+                            if(res.code === 200){
+                                vm.$message.success(res.msg);
+                                vm.dialogVisible = false;
+                                vm.loadData();
+                            }else{
+                                vm.$message.error(res.msg);
+                            }
+                        }
+                    })
+                })
+            },
+
+            // 删除租户
+            delTenant(row) {
+                const vm = this;
+                this.$confirm("确认永久删除该租户？删除后无法恢复", "警告", {
+                    type: "warning"
+                }).then(()=>{
+                    $.post("/pulsar-tenant/delete/" + row.id, res => {
+                        if(res.code === 200){
+                            vm.$message.success("删除成功");
+                            vm.loadData();
+                        }else{
+                            vm.$message.error(res.msg);
+                        }
+                    })
+                }).catch(()=>{})
+            },
+
+            // 设置默认租户
+            setDefaultTenant(row) {
+                const vm = this;
+                this.$confirm("设置该租户为系统默认租户，原有默认租户将被取消", "提示", {
+                    type: "info"
+                }).then(()=>{
+                    $.post("/pulsar-tenant/set-default/" + row.id, res => {
+                        if(res.code === 200){
+                            vm.$message.success("设置完成");
+                            vm.loadData();
+                        }else{
+                            vm.$message.error(res.msg);
+                        }
+                    })
+                }).catch(()=>{})
+            },
+
+            // 切换启用/禁用状态
+            handleActiveChange(row) {
+                const vm = this;
+                $.post("/pulsar-tenant/change-active", {
+                    id: row.id,
+                    isActive: row.isActive
+                }, res => {
+                    if(res.code !== 200){
+                        vm.$message.error(res.msg);
+                        vm.loadData();
+                    }
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

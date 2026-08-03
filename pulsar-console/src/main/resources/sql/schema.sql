@@ -245,3 +245,22 @@ COMMENT ON COLUMN t_audit_log.params IS '请求参数';
 COMMENT ON COLUMN t_audit_log.source_ip IS '操作来源IP';
 COMMENT ON COLUMN t_audit_log.create_at IS '操作时间';
 
+CREATE TABLE t_tenant (
+    id BIGSERIAL PRIMARY KEY,
+    tenant_code VARCHAR(100) NOT NULL UNIQUE,
+    tenant_name VARCHAR(200) NOT NULL UNIQUE,
+    description TEXT,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    create_at TIMESTAMP DEFAULT NOW(),
+    update_at TIMESTAMP DEFAULT NOW()
+);
+comment on table t_tenant is '租户管理表';
+COMMENT ON COLUMN t_tenant.id IS '主键';
+COMMENT ON COLUMN t_tenant.tenant_code IS '租户编码，全局唯一，如：zevent';
+COMMENT ON COLUMN t_tenant.tenant_name IS '租户名称，如：Pulsar默认租户';
+COMMENT ON COLUMN t_tenant.description IS '租户描述';
+COMMENT ON COLUMN t_tenant.is_default IS '是否默认租户，TRUE-是、FALSE-否';
+COMMENT ON COLUMN t_tenant.is_active IS '是否启用租户，TRUE-是、FALSE-否';
+COMMENT ON COLUMN t_tenant.create_at IS '创建时间';
+COMMENT ON COLUMN t_tenant.update_at IS '更新时间';

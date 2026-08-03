@@ -74,7 +74,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 修改
      */
-    @PutMapping("/edit/{id}")
+    @PostMapping("/edit/{id}")
     public Result<T> update(@PathVariable ID id, @Valid @RequestBody T entity) {
         if (!repository.existsById(id)) {
             return Result.error("数据不存在，无法修改");
@@ -87,7 +87,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 删除
      */
-    @DeleteMapping("/del/{id}")
+    @PostMapping("/del/{id}")
     public Result<Void> delete(@PathVariable ID id) {
         if (!repository.existsById(id)) {
             return Result.error("数据不存在");
@@ -99,7 +99,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 批量删除
      */
-    @DeleteMapping("/batch-del")
+    @PostMapping("/batch-del")
     public Result<Void> batchDelete(@RequestBody Iterable<ID> idList) {
         repository.deleteAllById(idList);
         return Result.success();

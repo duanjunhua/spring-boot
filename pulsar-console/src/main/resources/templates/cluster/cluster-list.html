@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>集群管理</title>
+    <!-- Vue2 -->
+    <script th:src="@{/element/vue.js}"></script>
+    <!-- ElementUI CSS+JS -->
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <!-- jQuery 3.7 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <style>
+        .toolbar {margin-bottom: 15px;}
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="toolbar">
+        <el-button type="primary" icon="el-icon-plus" @click="openAddDialog">新增集群</el-button>
+    </div>
+
+    <!-- 数据表格 -->
+    <el-table :data="tableData" border stripe style="width: 100%">
+        <el-table-column label="ID" prop="id" width="80"></el-table-column>
+        <el-table-column label="集群名称" prop="clusterName"></el-table-column>
+        <el-table-column label="服务地址" prop="serviceUrl"></el-table-column>
+        <el-table-column label="管理地址" prop="adminApiUrl"></el-table-column>
+        <el-table-column label="默认集群">
+            <template slot-scope="scope">
+                <el-tag v-if="scope.row.isDefault" type="success">默认</el-tag>
+                <span v-else>-</span>
+            </template>
+        </el-table-column>
+        <el-table-column label="集群状态">
+            <template slot-scope="scope">
+                <el-switch
+                        v-model="scope.row.status"
+                        active-value="ACTIVE"
+                        inactive-value="INACTIVE"
+                        @change="handleStatusChange(scope.row)"
+                ></el-switch>
+            </template>
+        </el-table-column>
+        <el-table-column label="描述" prop="description"></el-table-column>
+        <el-table-column label="创建时间" prop="createTime" width="180"></el-table-column>
+        <el-table-column label="操作" width="280">
+            <template slot-scope="scope">
+                <el-button size="mini" @click="openEditDialog(scope.row)">编辑</el-button>
+                <el-button size="mini" type="success" @click="handleSetDefault(scope.row)" v-if="!scope.row.isDefault">设为默认</el-button>
+                <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageNum"
+            :page-sizes="[10, 20, 50]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            style="margin-top:15px;text-align:right;"
+    ></el-pagination>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
+        <el-form ref="form" :model="formData" label-width="130px" :rules="rules">
+            <el-form-item label="集群名称" prop="clusterName">
+                <el-input v-model="formData.clusterName" placeholder="请输入集群名称"></el-input>
+            </el-form-item>
+            <el-form-item label="Pulsar服务地址" prop="serviceUrl">
+                <el-input v-model="formData.serviceUrl" placeholder="pulsar://127.0.0.1:6650"></el-input>
+            </el-form-item>
+            <el-form-item label="Admin管理地址" prop="adminApiUrl">
+                <el-input v-model="formData.adminApiUrl" placeholder="http://127.0.0.1:8080"></el-input>
+            </el-form-item>
+            <el-form-item label="认证插件类名">
+                <el-input v-model="formData.authPlugin"></el-input>
+            </el-form-item>
+            <el-form-item label="认证参数">
+                <el-input v-model="formData.authParams" type="textarea" rows="3"></el-input>
+            </el-form-item>
+            <el-form-item label="是否默认集群">
+                <el-switch v-model="formData.isDefault" active-text="是" inactive-text="否"></el-switch>
+            </el-form-item>
+            <el-form-item label="集群状态">
+                <el-select v-model="formData.status" placeholder="请选择">
+                    <el-option label="启用" value="ACTIVE"></el-option>
+                    <el-option label="停用" value="INACTIVE"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="集群描述">
+                <el-input v-model="formData.description" type="textarea" rows="2"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitForm">确定</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                // 分页参数
+                pageNum: 1,
+                pageSize: 10,
+                total: 0,
+                tableData: [],
+
+                // 弹窗
+                dialogVisible: false,
+                dialogTitle: '新增集群',
+                isEdit: false, // 是否编辑模式
+
+                // 表单数据
+                formData: {
+                    id: null,
+                    clusterName: '',
+                    serviceUrl: '',
+                    adminApiUrl: '',
+                    authPlugin: '',
+                    authParams: '',
+                    isDefault: false,
+                    status: 'ACTIVE',
+                    description: ''
+                },
+
+                // 表单校验规则
+                rules: {
+                    clusterName: [{required: true, message: '请填写集群名称', trigger: 'blur'}],
+                    serviceUrl: [{required: true, message: '请填写服务地址', trigger: 'blur'}],
+                    adminApiUrl: [{required: true, message: '请填写管理地址', trigger: 'blur'}]
+                }
+            }
+        },
+        mounted() {
+            this.loadTableData();
+        },
+        methods: {
+            // 加载表格数据
+            loadTableData() {
+                const _this = this;
+                $.get('/pulsar-clus/page', {
+                    pageNum: _this.pageNum,
+                    pageSize: _this.pageSize
+                }, function (res) {
+                    console.log(res)
+                    _this.tableData = res.data.content;
+                    _this.total = res.totalElements;
+                })
+            },
+
+            // 分页事件
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.pageNum = 1;
+                this.loadTableData();
+            },
+            handleCurrentChange(val) {
+                this.pageNum = val;
+                this.loadTableData();
+            },
+
+            // 打开新增弹窗
+            openAddDialog() {
+                this.dialogTitle = '新增集群';
+                this.isEdit = false;
+                this.formData = {
+                    id: null,
+                    clusterName: '',
+                    serviceUrl: '',
+                    adminApiUrl: '',
+                    authPlugin: '',
+                    authParams: '',
+                    isDefault: false,
+                    status: 'ACTIVE',
+                    description: ''
+                };
+                this.dialogVisible = true;
+                this.$nextTick(() => {
+                    this.$refs.form.clearValidate();
+                })
+            },
+
+            // 打开编辑弹窗
+            openEditDialog(row) {
+                const _this = this;
+                $.get('/pulsar-clus/get/' + row.id, function (res) {
+                    if (res.code === 200) {
+                        _this.formData = res.data;
+                        _this.dialogTitle = '编辑Pulsar集群';
+                        _this.isEdit = true;
+                        _this.dialogVisible = true;
+                        _this.$nextTick(() => {
+                            _this.$refs.form.clearValidate();
+                        })
+                    } else {
+                        _this.$message.error(res.msg);
+                    }
+                })
+            },
+
+            // 提交表单
+            submitForm() {
+                const _this = this;
+                this.$refs.form.validate((valid) => {
+                    if (!valid) return;
+                    let url = '/pulsar-clus/save-cluster';
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        contentType: 'application/json;charset=utf-8',
+                        data: JSON.stringify(_this.formData),
+                        success: function (res) {
+                            if (res.code === 200) {
+                                _this.$message.success(res.msg);
+                                _this.dialogVisible = false;
+                                _this.loadTableData();
+                            } else {
+                                _this.$message.error(res.msg);
+                            }
+                        }
+                    })
+                })
+            },
+
+            // 删除集群
+            handleDelete(row) {
+                const _this = this;
+                this.$confirm('确定要删除该集群吗？删除后不可恢复', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    $.post('/pulsar-clus/delete/' + row.id, function (res) {
+                        if (res.code === 200) {
+                            _this.$message.success('删除成功');
+                            _this.loadTableData();
+                        } else {
+                            _this.$message.error(res.msg);
+                        }
+                    })
+                }).catch(() => {})
+            },
+
+            // 设置默认集群
+            handleSetDefault(row) {
+                const _this = this;
+                this.$confirm('确定将该集群设置为默认集群？原有默认集群将被取消', '提示', {
+                    type: 'info'
+                }).then(() => {
+                    $.post('/pulsar-clus/set-default/' + row.id, function (res) {
+                        if (res.code === 200) {
+                            _this.$message.success('设置成功');
+                            _this.loadTableData();
+                        } else {
+                            _this.$message.error(res.msg);
+                        }
+                    })
+                }).catch(() => {})
+            },
+
+            // 切换启用/停用状态
+            handleStatusChange(row) {
+                const _this = this;
+                $.post('/pulsar-clus/change-status', {
+                    id: row.id,
+                    status: row.status
+                }, function (res) {
+                    if (res.code !== 200) {
+                        _this.$message.error(res.msg);
+                        _this.loadTableData();
+                    }
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>
