@@ -87,4 +87,15 @@ public class PulsarClusterController extends BaseCrudController<PulsarCluster, L
 
         return Result.success(cluster);
     }
+
+    /**
+     * 查看集群在线运行状态、集群接入时间及关联节点资源概况。
+     * @param clusterId
+     * @return
+     */
+    @GetMapping("/info/{id}")
+    public Result viewClusterInfo(@PathVariable("id") Long clusterId){
+        // TODO:
+        return Result.success();
+    }
 }

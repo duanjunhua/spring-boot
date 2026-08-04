@@ -40,14 +40,20 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 50MB
+  # Apache Pulsar
+  pulsar:
+    admin:
+      authentication:
+        param:
+          token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJicm9rZXItYWRtaW4ifQ.PFGexn4KKaw24udRzS1U2bsdL2WL64sOVapKV55B2cdO5QzhmpHELvtT3x4wF76WcewYym-GLhEqSMSl53oN9W11Z_B4LjcJ-bvYvPtkjoWP8lrshtsF5CiOlkdxWsYW1BMF4DCb681UZnEpxIW8vvx84E6wXKGDcm2LO-eKR9HYOKaTBe8mC-4SSYBd5jukdVDs_o5F5TzAwuLBxs7ltzr3DX9nDXN7AHtxcuE9Vn8R0bX4snkQXy-laR5j9bVYzPyjlplMdPZrda1MNBJlj7oGJpUSDe2-Fglkdv1L8NkGIOksfRWZAMwO-NReDCsA_PSwKK-af2HZikjm1dl3VQ
 
 # 日志配置
 logging:
   level:
     root: INFO
-    com.pulsar.console: DEBUG
-    org.springframework.security: TRACE
-    org.springframework.security.oauth2: TRACE
+    com.pulsar.console: INFO
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: INFO
     org.apache.pulsar: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
@@ -61,3 +67,5 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+
