@@ -1,5 +1,7 @@
 package com.kingroad.pulsar.authorization.filter;
 
+import com.kingroad.pulsar.authorization.handler.SystemInitInterceptor;
+import jakarta.annotation.Resource;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +9,9 @@ import org.apache.catalina.filters.RemoteIpFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.IOException;
 
@@ -18,7 +23,29 @@ import java.io.IOException;
  */
 @Slf4j
 @Configuration
-public class WebConfiguration {
+public class WebConfiguration implements WebMvcConfigurer {
+
+    @Resource
+    SystemInitInterceptor initInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(initInterceptor)
+                .addPathPatterns("/**")
+                // 排除静态资源
+                .excludePathPatterns("/element/**","/js/**","/css/**","/images/**")
+                // 初始化页面本身不需要登录拦截也要放开
+                .excludePathPatterns("/system/init","/init/save", "/rsa/get-pubkey");
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 放行静态资源
+        registry.addResourceHandler("/element/**")
+                .addResourceLocations("classpath:/static/element/");
+        registry.addResourceHandler("/js/**")
+                .addResourceLocations("classpath:/static/js/");
+    }
 
     @Bean
     public RemoteIpFilter remoteIpFilter(){

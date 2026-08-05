@@ -22,7 +22,7 @@ public class Md5PasswordEncoder implements PasswordEncoder {
 
     @Override
     public boolean matches(CharSequence password, String encodedPassword) {
-        log.info("密码：{}，加密密码：{}", DigestUtils.md5Hex(password.toString()), encodedPassword);
+        log.info("自定义密码处理");
         return encodedPassword.equals(DigestUtils.md5Hex(password.toString()));
     }
 
@@ -31,5 +31,4 @@ public class Md5PasswordEncoder implements PasswordEncoder {
         // MD5是固定算法
         return  false;
     }
-
 }

@@ -37,7 +37,7 @@ public class PulsarClusterStatusCheck {
     PulsarClusterService clusterService;
 
     // 5秒检查一次
-    @Scheduled(fixedRate = 5000 * 60)
+    @Scheduled(fixedRate = 5* 60 * 1000)
     public void saveCluster(){
         List<PulsarCluster> clusters = clusterService.findAll();
         if(ObjectUtils.isEmpty(clusters)) return;

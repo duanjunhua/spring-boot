@@ -11,6 +11,7 @@ public class Result<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private Boolean success;
     private Integer code;
     private String message;
     private T data;
@@ -19,6 +20,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success() {
         Result<T> result = new Result<>();
         result.setCode(200);
+        result.setSuccess(true);
         result.setMessage("操作成功");
         return result;
     }
@@ -26,6 +28,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success(T data) {
         Result<T> result = new Result<>();
         result.setCode(200);
+        result.setSuccess(true);
         result.setMessage("操作成功");
         result.setData(data);
         return result;
@@ -34,6 +37,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success(String message, T data) {
         Result<T> result = new Result<>();
         result.setCode(200);
+        result.setSuccess(true);
         result.setMessage(message);
         result.setData(data);
         return result;
@@ -42,6 +46,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> error(String message) {
         Result<T> result = new Result<>();
         result.setCode(500);
+        result.setSuccess(false);
         result.setMessage(message);
         return result;
     }
@@ -49,6 +54,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> error(Integer code, String message) {
         Result<T> result = new Result<>();
         result.setCode(code);
+        result.setSuccess(false);
         result.setMessage(message);
         return result;
     }
@@ -56,6 +62,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> error(int code, String message, T data) {
         Result<T> result = new Result<>();
         result.setCode(code);
+        result.setSuccess(false);
         result.setMessage(message);
         result.setData(data);
         return result;

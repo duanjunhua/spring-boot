@@ -1,42 +1,152 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>登录</title>
-    <style>.login-box{width:400px;margin:100px auto;padding:30px;border:1px solid #eee}</style>
+    <title>系统登录</title>
+    <!-- Vue2 -->
+    <script th:src="@{/element/vue.js}"></script>
+    <!-- ElementUI CSS+JS -->
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <!-- jQuery 3.7 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <!-- RSA加密工具: 用于密码加密 -->
+    <script th:src="@{/js/encrypt/jsencrypt.min.js}"></script>
+    <style>
+        .login-wrap {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-card {
+            width: 420px;
+            padding: 30px 20px;
+        }
+        .login-title {
+            font-size: 26px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .login-btn {
+            width: 100%;
+            height:44px;
+            font-size:16px;
+        }
+        .sso-box {
+            text-align: center;
+            margin-top:8px;
+        }
+    </style>
 </head>
 <body>
-
-    <div class="login-box">
-        <h2 align="center">账号登录</h2>
-        <form th:action="@{/doLogin}" method="post">
-            <div>
-                <label>登录名</label>
-                <input name="username" required style="width:100%;margin:8px 0;padding:8px">
-            </div>
-            <div>
-                <label>密码</label>
-                <input type="password" name="password" required style="width:100%;margin:8px 0;padding:8px">
-            </div>
-            <button type="submit" style="width:100%;padding:10px;margin-top:10px">账号密码登录</button>
+<div id="app" class="login-wrap">
+    <el-card class="login-card" shadow="hover">
+        <div class="login-title">账号登录</div>
+        <form id="securityLoginForm" th:action="@{/doLogin}" method="post">
+            <el-form ref="loginForm" :model="loginForm" :rules="loginRules" label-width="70px">
+                <el-form-item label="登录名" prop="username">
+                    <el-input v-model="loginForm.username" placeholder="请输入登录名" prefix-icon="el-icon-user"></el-input>
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                    <el-input v-model="originPassword" type="password" placeholder="请输入密码" prefix-icon="el-icon-lock"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <!-- 绑定点击事件 -->
+                    <el-button class="login-btn" type="primary" :loading="loading" @click="handleLogin">本地登录</el-button>
+                </el-form-item>
+            </el-form>
+            <!-- 【关键】隐藏域：传给SpringSecurity的username、password -->
+            <input type="hidden" name="username" v-model="loginForm.username">
+            <input type="hidden" name="password" v-model="loginForm.password">
         </form>
 
-        <div style="margin:20px 0;text-align:center;color:#999;">———— 第三方单点登录 ————</div>
-
-        <!-- OAuth2三方登录按钮：跳转授权地址 -->
-        <div align="center" th:if="${ssoEnable}">
+        <el-divider content-position="center" th:if="${ssoEnable}">第三方登录</el-divider>
+        <div class="sso-box" th:if="${ssoEnable}">
             <a th:href="@{/oauth2/authorization/{id}(id=${registrationId})}">
-                <el-button type="success">SSO登录</el-button>
+                <el-button type="warning" icon="el-icon-lock" circle title="SSO登录"></el-button>
             </a>
         </div>
+    </el-card>
+</div>
 
-        <!-- 错误提示 -->
-        <div th:if="${param.error}" style="color:red;margin-top:15px;text-align:center;">
-            用户名或密码错误，请重新输入
-        </div>
-        <div th:if="${param.logout}" style="color:green;margin-top:15px;text-align:center;">
-            已成功退出登录
-        </div>
-    </div>
+<script>
+    var vm = new Vue({
+        el:'#app',
+        data(){
+            return {
+                loading: false,
+                publicKey: "",
+                originPassword: "",        // 用户输入原始密码
+                loginForm: {
+                    username:'',
+                    password:''            // RSA加密后的密码
+                },
+                loginRules: {
+                    username:[{required:true, message:'请输入登录名', trigger:'blur'}],
+                    originPassword:[{required:true, message:'请输入密码', trigger:'blur'}]
+                }
+            }
+        },
+        created(){
+            this.getRsaPublicKey();
+        },
+        methods:{
+            // 获取RSA公钥
+            getRsaPublicKey() {
+                const _this = this;
+                $.get("/rsa/get-pubkey", res => {
+                    if(res.success) {
+                        this.publicKey = res.data.replaceAll("\\\\n", "\n");
+                        console.log("公钥：" + this.publicKey);
+                    } else {
+                        _this.$message.error("获取加密公钥失败！");
+                    }
+                }).fail(()=>{
+                    _this.$message.error("请求公钥接口异常");
+                })
+            },
+            // 密码加密
+            encryptPassword(){
+                const _this = this;
+                if(!this.publicKey){
+                    _this.$message.warning("加密公钥尚未加载完成");
+                    return false;
+                }
+                const encrypt = new JSEncrypt();
+                encrypt.setPublicKey(this.publicKey);
+                let encryptedPwd = encrypt.encrypt(this.originPassword);
+                if(!encryptedPwd){
+                    _this.$message.error("密码加密失败");
+                    return false;
+                }
+                this.loginForm.password = encryptedPwd;
+                return true;
+            },
+            // 登录按钮点击事件
+            handleLogin(){
+                this.$refs.loginForm.validate((valid) => {
+                    if (!valid) return;
+                    if(this.loading) return;
+                    this.loading = true;
+
+                    // 执行加密
+                    const encryptOk = this.encryptPassword();
+                    console.log(encryptOk)
+                    debugger
+                    if(!encryptOk){
+                        this.loading = false;
+                        return;
+                    }
+                    console.log("===========", this.loginForm)
+                    // 提交原生form表单，交给SpringSecurity /doLogin
+                    document.getElementById("securityLoginForm").submit();
+                })
+            }
+        }
+    })
+</script>
 </body>
 </html>

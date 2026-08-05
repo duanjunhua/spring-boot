@@ -8,6 +8,13 @@ package com.kingroad.pulsar.common;
  */
 public class CommonConst {
 
+    /**
+     * 初始化系统配置
+     */
+    public static final String INIT_SYSTEM = "init_finished";
+
+    public static final String COM_ONE = "1";
+
     // 默认租户
     public static final String DEFAULT_TENANT = "zevent";
 

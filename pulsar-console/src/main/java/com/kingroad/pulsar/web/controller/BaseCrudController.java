@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.web.controller;
 
+import com.kingroad.pulsar.aop.Log;
 import com.kingroad.pulsar.common.PageQuery;
 import com.kingroad.pulsar.common.Result;
 import jakarta.annotation.Resource;
@@ -33,6 +34,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 分页查询
      */
+    @Log(operation = Log.OperationType.PAGE, description = "分页查询")
     @GetMapping("/page")
     public Result<Page<T>> page(@Valid PageQuery pageQuery) {
         Sort sort = Sort.unsorted();
@@ -53,6 +55,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 根据主键查询
      */
+    @Log(operation = Log.OperationType.QUERY, description = "查询详情")
     @GetMapping("/get/{id}")
     public Result<T> getById(@PathVariable ID id) {
         Optional<T> optional = repository.findById(id);
@@ -65,6 +68,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 新增
      */
+    @Log(operation = Log.OperationType.ADD, description = "新增对象")
     @PostMapping("/save")
     public Result<T> save(@Valid @RequestBody T entity) {
         T save = repository.save(entity);
@@ -74,6 +78,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 修改
      */
+    @Log(operation = Log.OperationType.UPDATE, description = "修改对象")
     @PostMapping("/edit/{id}")
     public Result<T> update(@PathVariable ID id, @Valid @RequestBody T entity) {
         if (!repository.existsById(id)) {
@@ -87,6 +92,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 删除
      */
+    @Log(operation = Log.OperationType.DELETE, description = "删除对象")
     @PostMapping("/del/{id}")
     public Result<Void> delete(@PathVariable ID id) {
         if (!repository.existsById(id)) {
@@ -99,6 +105,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 批量删除
      */
+    @Log(operation = Log.OperationType.DELETE, description = "批量删除")
     @PostMapping("/batch-del")
     public Result<Void> batchDelete(@RequestBody Iterable<ID> idList) {
         repository.deleteAllById(idList);

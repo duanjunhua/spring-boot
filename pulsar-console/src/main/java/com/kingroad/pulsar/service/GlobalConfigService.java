@@ -7,6 +7,7 @@ import com.kingroad.pulsar.exception.BusinessException;
 import com.kingroad.pulsar.repository.GlobalConfigRepository;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Example;
@@ -95,4 +96,16 @@ public class GlobalConfigService {
         return config.getConfigValue();
     }
 
+    /**
+     * 批量保存
+     * @param entities
+     * @return
+     */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public List<GlobalConfig> saveAll(List<GlobalConfig> entities) {
+
+        if(CollectionUtils.isEmpty(entities)) return entities;
+
+        return  repository.saveAll(entities);
+    }
 }

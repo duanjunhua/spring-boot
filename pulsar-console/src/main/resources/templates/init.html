@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>系统初始化 - 事件中心管理平台</title>
+    <!-- Vue2 -->
+    <script th:src="@{/element/vue.js}"></script>
+    <!-- ElementUI CSS+JS -->
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <!-- jQuery 3.7 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <!-- RSA加密工具: 用于密码加密 -->
+    <script th:src="@{/js/encrypt/jsencrypt.min.js}"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #f2f4f7;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto;
+        }
+        .wrap {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .init-card {
+            width: 30%;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 36px 40px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        .logo-box {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .logo-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #4096ff;
+            color: #fff;
+            font-size: 26px;
+        }
+        .title-main {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            margin: 12px 0 4px;
+        }
+        .title-sub {
+            text-align: center;
+            color: #86909c;
+            font-size: 13px;
+            margin-bottom: 28px;
+        }
+        .el-step__title {
+            font-size: 14px;
+        }
+        .two-col-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .el-input__inner {
+            height: 42px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="init-card" id="app">
+        <div class="logo-box">
+            <div class="logo-circle">☁</div>
+            <div class="title-main">系统初始化</div>
+            <div class="title-sub">事件中心管理平台</div>
+        </div>
+
+        <el-steps :active="currentStep" simple style="margin-bottom:30px">
+            <el-step title="设置密码"></el-step>
+            <el-step title="OAuth配置"></el-step>
+        </el-steps>
+
+        <!-- 步骤1：设置管理员密码 -->
+        <div v-if="currentStep === 0">
+            <el-form ref="formStep1" :model="formStep1" label-width="100px">
+                <el-form-item label="管理员账号">
+                    <el-input v-model="formStep1.username" disabled></el-input>
+                </el-form-item>
+                <el-form-item label="管理员密码" prop="passwordHash" :rules="[{required:true,message:'请输入管理员密码',trigger:'blur'}]">
+                    <el-input v-model="formStep1.passwordHash" show-password placeholder="请输入密码"></el-input>
+                </el-form-item>
+                <el-form-item label="确认密码" prop="confirmPwd"
+                              :rules="[{required:true,message:'请再次输入密码',trigger:'blur'},
+                              {validator: checkPwd, trigger:'blur'}]">
+                    <el-input v-model="formStep1.confirmPwd" show-password placeholder="请再次输入密码"></el-input>
+                </el-form-item>
+                <el-form-item style="margin-top:30px;">
+                    <el-button type="primary" size="large" style="width:100%;height:44px;border-radius:8px;" @click="nextStep">下一步</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+
+        <!-- 步骤2：SSO/OAuth配置 -->
+        <div v-if="currentStep === 1">
+            <el-form ref="formStep2" :model="formStep2" label-width="130px">
+                <el-form-item label="开启OAuth认证">
+                    <el-switch v-model="formStep2.ssoEnable" active-value="1" inactive-value="0"></el-switch>
+                </el-form-item>
+                <div v-if="formStep2.ssoEnable === '1'" style="max-height: 20%;">
+                    <el-form-item label="Client ID" prop="clientId" :rules="ssoRules.clientId">
+                        <el-input v-model="formStep2.clientId" placeholder="请输入Client ID，如：pulsar-console-oauth"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Client Secret" prop="clientSecret" :rules="ssoRules.clientSecret">
+                        <el-input v-model="formStep2.clientSecret" show-password placeholder="请输入Client Secret，如：$2a$10$zP.Qg3J2qpM7yN0mvHPB9uuetH18U7FLUyA3ml8lQJ.cBt4IYhDvC"></el-input>
+                    </el-form-item>
+                    <el-form-item label="authorization_uri" prop="authorizationUri" :rules="ssoRules.authorizationUri">
+                        <el-input v-model="formStep2.authorizationUri" placeholder="授权地址，如：http://ssoip:port/oauth2/authorize"></el-input>
+                    </el-form-item>
+                    <el-form-item label="token_uri" prop="tokenUri" :rules="ssoRules.tokenUri">
+                        <el-input v-model="formStep2.tokenUri" placeholder="Token地址，如：http://ssoip:port/oauth2/token"></el-input>
+                    </el-form-item>
+                    <el-form-item label="registration_id" prop="registrationId" :rules="ssoRules.registrationId">
+                        <el-input v-model="formStep2.registrationId" placeholder="注册标识，如：Github、enterprise_sso"></el-input>
+                    </el-form-item>
+                    <el-form-item label="redirect_uri" prop="redirectUri" :rules="ssoRules.redirectUri">
+                        <el-input v-model="formStep2.redirectUri" placeholder="回调地址，如：http://serverip:port/login/oauth2/code/pulsar-console-oauth"></el-input>
+                    </el-form-item>
+                    <el-form-item label="jwt_set_uri" prop="jwtSetUri" :rules="ssoRules.jwtSetUri">
+                        <el-input v-model="formStep2.jwtSetUri" placeholder="JWT JWKS地址，如：http://ssoip:port/oauth2/jwks"></el-input>
+                    </el-form-item>
+                    <el-form-item label="userinfo_uri" prop="userInfoUri" :rules="ssoRules.userInfoUri">
+                        <el-input v-model="formStep2.userInfoUri" placeholder="UserInfo地址，如：http://ssoip:port/oauth2/userinfo"></el-input>
+                    </el-form-item>
+                </div>
+
+                <div class="btn-group">
+                    <el-button size="large" @click="prevStep">上一步</el-button>
+                    <el-button type="primary" size="large" @click="submitAll">开始初始化</el-button>
+                </div>
+            </el-form>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    new Vue({
+        el:'#app',
+        data() {
+            return {
+                currentStep: 0,
+                formStep1: {
+                    username: 'admin',
+                    passwordHash: '',
+                    confirmPwd: ''
+                },
+                formStep2: {
+                    ssoEnable: 0,
+                    clientId: '',
+                    clientSecret: '',
+                    authorizationUri: '',
+                    tokenUri: '',
+                    registrationId: '',
+                    redirectUri: '',
+                    jwtSetUri: ''
+                },
+                ssoRules: {
+                    clientId: [],
+                    clientSecret: [],
+                    authorizationUri: [],
+                    tokenUri: [],
+                    registrationId: [],
+                    redirectUri: [],
+                    jwtSetUri: []
+                }
+            }
+        },
+        watch: {
+            'formStep2.ssoEnable'(val) {
+                this.buildRule();
+            }
+        },
+        created() {
+            this.buildRule();
+            this.loadPublicKey();
+        },
+        methods: {
+            // 获取后端RSA公钥
+            loadPublicKey() {
+                $.get("/rsa/get-pubkey", res => {
+                    if(res.success) {
+                        this.publicKey = res.data.replaceAll("\\\\n", "\n");
+                        console.log("公钥：" + this.publicKey);
+                    }
+                })
+            },
+
+            // ========= RSA加密密码 =========
+            encryptPwd(){
+                const vm = this;
+                const encrypt = new JSEncrypt();
+                encrypt.setPublicKey(vm.publicKey);
+                return encrypt.encrypt(vm.formStep1.passwordHash);
+            },
+
+            checkPwd(rule, value, callback) {
+                if (value !== this.formStep1.passwordHash) {
+                    return callback(new Error('两次输入密码不一致'));
+                }
+                callback();
+            },
+            buildRule() {
+                const required = [{required:true, message:'此项不能为空', trigger:'blur'}];
+                const empty = [];
+                const enable = this.formStep2.ssoEnable === 1;
+                this.ssoRules.clientId = enable ? required : empty;
+                this.ssoRules.clientSecret = enable ? required : empty;
+                this.ssoRules.authorizationUri = enable ? required : empty;
+                this.ssoRules.tokenUri = enable ? required : empty;
+                this.ssoRules.registrationId = enable ? required : empty;
+                this.ssoRules.redirectUri = enable ? required : empty;
+                this.ssoRules.jwtSetUri = enable ? required : empty;
+            },
+            nextStep() {
+                this.$refs.formStep1.validate(valid=>{
+                    if(valid) this.currentStep = 1;
+                })
+            },
+            prevStep() {
+                this.currentStep = 0;
+            },
+            submitAll() {
+                const vm = this;
+                this.$refs.formStep2.validate(valid=>{
+                    if(!valid) return;
+
+                    const postData = {
+                        passwordHash: vm.encryptPwd(),
+                        ssoEnable: this.formStep2.ssoEnable,
+                        clientId: this.formStep2.clientId,
+                        clientSecret: this.formStep2.clientSecret,
+                        authorizationUri: this.formStep2.authorizationUri,
+                        tokenUri: this.formStep2.tokenUri,
+                        registrationId: this.formStep2.registrationId,
+                        redirectUri: this.formStep2.redirectUri,
+                        jwtSetUri: this.formStep2.jwtSetUri
+                    };
+                    $.post("/init/save", postData, function(res){
+                        console.log(postData)
+                        if(res.code === 200) {
+                            vm.$message.success("初始化完成，跳转登录页");
+                            setTimeout(()=>location.href="/login",1200);
+                        }else{
+                            vm.$message.error(res.msg);
+                        }
+                    }).fail(()=> vm.$message.error("网络异常"));
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

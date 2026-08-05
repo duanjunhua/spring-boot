@@ -1,12 +1,16 @@
 package com.kingroad.pulsar.util;
 
 import cn.hutool.core.util.ObjectUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import javax.crypto.Cipher;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 /**
  * @Author: Michael J H Duan[JunHua]
@@ -14,17 +18,21 @@ import java.security.NoSuchAlgorithmException;
  * @Version: v1.0
  * @Description:
  */
+@Slf4j
 public class EncryptUtil {
 
-    public enum SHA{
+    public static final int RSA_KEY_SIZE = 2048;
+
+    public enum ALG {
         SHA224("SHA-224"),
         SHA256("SHA-256"),
         SHA384("SHA-384"),
-        SHA512("SHA-512");
+        SHA512("SHA-512"),
+        RSA("RSA");
 
         private String algorithm;
 
-        SHA(String algorithm){
+        ALG(String algorithm){
             this.algorithm = algorithm;
         }
     }
@@ -73,7 +81,7 @@ public class EncryptUtil {
      */
     public static String sha(String str, String algorithm){
         try {
-            MessageDigest digest = MessageDigest.getInstance(ObjectUtil.isNull(algorithm)? SHA.SHA256.name() : algorithm);
+            MessageDigest digest = MessageDigest.getInstance(ObjectUtil.isNull(algorithm)? ALG.SHA256.name() : algorithm);
             byte[] hash = digest.digest(str.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
             // 将字节数组转换为十六进制字符串
@@ -89,11 +97,92 @@ public class EncryptUtil {
         }
     }
 
+    /*------------------------- RSA Util ---------------------------------*/
+
+    /**
+     * 生成密钥对
+     */
+    public static KeyPair getRsaKeyPair() {
+        try {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance(ALG.RSA.name());
+            generator.initialize(RSA_KEY_SIZE);
+            return generator.generateKeyPair();
+        }catch (NoSuchAlgorithmException e) {
+            log.error("密钥对生成失败！{}", e.getLocalizedMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 公钥加密
+     */
+    public static String encryptWithRsa(String rawText, PublicKey publicKey) {
+        try {
+            Cipher cipher = Cipher.getInstance(ALG.RSA.name());
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            byte[] bytes = cipher.doFinal(rawText.getBytes());
+            return Base64.getEncoder().encodeToString(bytes);
+        }catch (Exception e) {
+            log.error("公钥加密失败！{}", e.getLocalizedMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 私钥解密
+     */
+    public static String decryptWithRsa(String cipherText, PrivateKey privateKey) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(cipherText);
+            Cipher cipher = Cipher.getInstance(ALG.RSA.name());
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            return new String(cipher.doFinal(bytes));
+        }catch (Exception e) {
+            log.error("解密失败失败！{}", e.getLocalizedMessage());
+        }
+        return null;
+    }
+
+    /**
+     * base64字符串转公钥
+     */
+    public static PublicKey getRsaPublicKey(String base64PubKey) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(base64PubKey);
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
+            KeyFactory factory = KeyFactory.getInstance(ALG.RSA.name());
+            return factory.generatePublic(spec);
+        }catch (Exception e) {
+            log.error("字符串转公钥失败！{}", e.getLocalizedMessage());
+        }
+        return null;
+    }
+
+    /**
+     * base64裸串 → PrivateKey（PKCS8）
+     */
+    public static PrivateKey getRsaPrivateKey(String base64PriKey) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(base64PriKey);
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
+            KeyFactory factory = KeyFactory.getInstance(ALG.RSA.name());
+            return factory.generatePrivate(spec);
+        }catch (Exception e) {
+            log.error("字符串转私钥失败！{}", e.getLocalizedMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 包装公钥为PEM格式（jsencrypt强制要求）
+     */
+    public static String wrapPublicKey(String base64Pub) {
+        return "-----BEGIN PUBLIC KEY-----\n"
+                + base64Pub.replaceAll("(.{64})", "$1\n")
+                + "\n-----END PUBLIC KEY-----";
+    }
+
     public static void main(String[] args) {
-//        System.out.println(sha("123456", SHA.SHA256.name()));
-
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        System.out.println(passwordEncoder.encode("admin123"));
-
+        // TODO:
     }
 }

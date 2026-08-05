@@ -1,13 +1,18 @@
 package com.kingroad.pulsar.authorization;
 
+import com.kingroad.pulsar.authorization.filter.PreUsernamePasswordAuthenticationFilter;
+import com.kingroad.pulsar.authorization.service.LocalUserDetailService;
 import com.kingroad.pulsar.authorization.sso.OAuth2UserService;
 import com.kingroad.pulsar.authorization.sso.OAuthOidcUserService;
 import com.kingroad.pulsar.authorization.sso.SsoClientRegistrationRepository;
+import com.kingroad.pulsar.config.RsaConfig;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -60,13 +65,24 @@ public class SecurityConfig {
         return provider;
     }
 
+    // 提供AuthenticationManager Bean
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
     // 安全过滤链
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
+
+        // 配置前端登录密码解码
+        PreUsernamePasswordAuthenticationFilter rsaFilter = new PreUsernamePasswordAuthenticationFilter(RsaConfig.PRIVATE_KEY);
+        rsaFilter.setAuthenticationManager(authenticationManager);
+
         http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                     // 放行自定义登录页面、静态资源(css/js/img)、验证码等
-                    .requestMatchers("/login", "/login/auth/**", "/doLogin","/css/**", "/element/**", "/js/**").permitAll()
+                    .requestMatchers("/login", "/login/auth/**", "/doLogin", "/system/init/**", "/rsa/**","/init/save", "/css/**", "/element/**", "/js/**").permitAll()
                     // 其余所有接口必须登录认证
                     .anyRequest().authenticated()
             )
