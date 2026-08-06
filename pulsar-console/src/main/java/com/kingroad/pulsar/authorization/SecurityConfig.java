@@ -1,11 +1,9 @@
 package com.kingroad.pulsar.authorization;
 
-import com.kingroad.pulsar.authorization.filter.PreUsernamePasswordAuthenticationFilter;
 import com.kingroad.pulsar.authorization.service.LocalUserDetailService;
 import com.kingroad.pulsar.authorization.sso.OAuth2UserService;
 import com.kingroad.pulsar.authorization.sso.OAuthOidcUserService;
 import com.kingroad.pulsar.authorization.sso.SsoClientRegistrationRepository;
-import com.kingroad.pulsar.config.RsaConfig;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,10 +73,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
 
-        // 配置前端登录密码解码
-        PreUsernamePasswordAuthenticationFilter rsaFilter = new PreUsernamePasswordAuthenticationFilter(RsaConfig.PRIVATE_KEY);
-        rsaFilter.setAuthenticationManager(authenticationManager);
-
         http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                     // 放行自定义登录页面、静态资源(css/js/img)、验证码等
@@ -86,7 +80,7 @@ public class SecurityConfig {
                     // 其余所有接口必须登录认证
                     .anyRequest().authenticated()
             )
-            // 本地用户登录
+
             .formLogin(form ->
                     // 访问该地址：控制器跳转自定义登录html页面
                     form.loginPage("/login")
@@ -97,6 +91,7 @@ public class SecurityConfig {
                         .failureUrl("/login?error=true")
                         .permitAll()
             )
+
             // 第三方用户SSO登录
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")

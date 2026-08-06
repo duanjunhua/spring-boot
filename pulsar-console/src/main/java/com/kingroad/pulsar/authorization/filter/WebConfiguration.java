@@ -53,44 +53,18 @@ public class WebConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
-    public FilterRegistrationBean filterRegistration(){
-        FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter(new RequestLogFilter());
-
-        registration.addUrlPatterns("/*");
-        registration.addInitParameter("paramName", "paramValue");
-        registration.setName("PersonalFilter");
-        registration.setOrder(1);
-        return registration;
+    public FilterRegistrationBean<Filter> filterRegistration(){
+        return buildFilter(new ApplicationRequestFilter(), ApplicationRequestFilter.class.getSimpleName(), 1, "/**");
     }
 
-    /**
-     * 自定义请求Filter
-     */
-    public class RequestLogFilter implements Filter {
-
-
-        @Override
-        public void init(FilterConfig filterConfig) throws ServletException {
-            //
-        }
-
-        @Override
-        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-            HttpServletRequest request = (HttpServletRequest) servletRequest;
-            log.info("Personal Filter, Filter Url: {}", request.getRequestURI());
-
-            // TODO：进行请求相关预处理，如日志存储等
-
-
-            filterChain.doFilter(servletRequest, servletResponse);
-        }
-
-        @Override
-        public void destroy() {
-            //
-        }
+    // 抽取公共构建方法
+    private FilterRegistrationBean<Filter> buildFilter(Filter filter, String name, int order, String... patterns) {
+        FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+        bean.setFilter(filter);
+        bean.setName(name);
+        bean.addUrlPatterns(patterns);
+        bean.setOrder(order);
+        return bean;
     }
-
 
 }

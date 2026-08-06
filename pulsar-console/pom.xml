@@ -220,6 +220,21 @@
             <artifactId>commons-codec</artifactId>
         </dependency>
 
+        <!-- 软件授权工具: smart-license -->
+
+        <dependency>
+            <groupId>org.smartboot.license</groupId>
+            <artifactId>license-server</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <!--
+        <dependency>
+            <groupId>org.smartboot.license</groupId>
+            <artifactId>smart-license-spring-boot-starter</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+        -->
+
         <!-- Lombok简化代码 -->
         <dependency>
             <groupId>org.projectlombok</groupId>

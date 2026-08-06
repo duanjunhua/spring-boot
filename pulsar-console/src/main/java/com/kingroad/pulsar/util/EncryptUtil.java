@@ -70,7 +70,7 @@ public class EncryptUtil {
      *
      */
     public static String md5(String str, String salt) {
-        return DigestUtils.md5Hex(str.toString());
+        return DigestUtils.md5Hex(str + salt);
     }
 
     /**
@@ -183,6 +183,10 @@ public class EncryptUtil {
     }
 
     public static void main(String[] args) {
-        // TODO:
+        String raw = "123456";
+        String salt = "pulsar-app-console";
+        // 调用工具类
+        String md5Val = EncryptUtil.md5(raw, salt);
+        System.out.println(md5Val);
     }
 }

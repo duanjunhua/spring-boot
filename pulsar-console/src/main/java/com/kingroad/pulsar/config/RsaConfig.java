@@ -26,7 +26,5 @@ public class RsaConfig {
         KeyPair keyPair = EncryptUtil.getRsaKeyPair();
         PUBLIC_KEY = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
         PRIVATE_KEY = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
-        log.info(PUBLIC_KEY);
-        log.info(PRIVATE_KEY);
     }
 }

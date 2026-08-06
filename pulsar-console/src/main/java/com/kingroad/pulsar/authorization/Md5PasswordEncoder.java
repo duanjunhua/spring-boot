@@ -1,7 +1,12 @@
 package com.kingroad.pulsar.authorization;
 
+import com.kingroad.pulsar.common.CommonConst;
+import com.kingroad.pulsar.config.RsaConfig;
+import com.kingroad.pulsar.util.EncryptUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -15,15 +20,27 @@ import org.springframework.stereotype.Component;
 @Component
 public class Md5PasswordEncoder implements PasswordEncoder {
 
+    /**
+     * 密码盐
+     */
+    public static final String SALT = "pulsar-app-console";
+
     @Override
     public String encode(CharSequence password) {
-        return DigestUtils.md5Hex(password.toString());
+        return EncryptUtil.md5(password.toString(), SALT);
     }
 
     @Override
     public boolean matches(CharSequence password, String encodedPassword) {
-        log.info("自定义密码处理");
-        return encodedPassword.equals(DigestUtils.md5Hex(password.toString()));
+
+        log.info("进入前端密码解码与密码校验");
+
+
+        String rawPassword = EncryptUtil.decryptWithRsa(String.valueOf(password), EncryptUtil.getRsaPrivateKey(RsaConfig.PRIVATE_KEY));
+        if(StringUtils.isBlank(rawPassword)){
+            throw new BadCredentialsException("密码解密失败，请重试");
+        }
+        return encodedPassword.equals(encode(rawPassword));
     }
 
     @Override
