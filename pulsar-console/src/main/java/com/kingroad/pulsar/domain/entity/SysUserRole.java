@@ -1,7 +1,9 @@
 package com.kingroad.pulsar.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @Author: Michael J H Duan[JunHua]
@@ -11,6 +13,8 @@ import lombok.Data;
  */
 @Data
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "t_user_role")
 public class SysUserRole extends BaseAuditEntity{
 
@@ -31,4 +35,8 @@ public class SysUserRole extends BaseAuditEntity{
      */
     private Long roleId;
 
+    public SysUserRole(Long userId, Long roleId) {
+        this.userId = userId;
+        this.roleId = roleId;
+    }
 }

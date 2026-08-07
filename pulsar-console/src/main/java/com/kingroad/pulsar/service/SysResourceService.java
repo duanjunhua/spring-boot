@@ -106,4 +106,24 @@ public class SysResourceService {
                         // 通过 TreeSet 去重
                         Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(SysResource::getId))), ArrayList::new));
     }
+
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
+    /**
+     * 获取所有资源（树形弹窗分配）
+     */
+    public List<SysResource> getAllResource() {
+        return repository.findAllByOrderBySortOrder();
+    }
+
+    /**
+     * 查询子资源
+     */
+    public List<SysResource> getChildren(Long parentId) {
+        return repository.findByParentIdOrderBySortOrder(parentId);
+    }
+
 }

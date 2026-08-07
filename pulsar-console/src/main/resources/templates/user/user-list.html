@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理</title>
+    <!-- Vue2 -->
+    <script th:src="@{/element/vue.js}"></script>
+    <!-- ElementUI CSS+JS -->
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <!-- jQuery 3.7 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <!-- RSA加密工具: 用于密码加密 -->
+    <script th:src="@{/js/encrypt/jsencrypt.min.js}"></script>
+    <!-- Common JS，需要先引入jsencrypt -->
+    <script th:src="@{/js/common.js}"></script>
+    <style>
+        .toolbar {margin-bottom: 15px;}
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="toolbar">
+        <el-button type="primary" icon="el-icon-plus" @click="openAddDialog">新增用户</el-button>
+    </div>
+    <!-- 用户表格 -->
+    <el-table :data="tableData" border stripe style="width: 100%">
+        <el-table-column label="ID" prop="id" width="80" ></el-table-column>
+        <el-table-column label="账号" prop="username"></el-table-column>
+        <el-table-column label="中文名" prop="chineseName"></el-table-column>
+        <el-table-column label="SSO唯一ID" prop="ssoId"></el-table-column>
+        <el-table-column label="关联租户" prop="tenantName" :formatter="formatTenant"></el-table-column>
+        <el-table-column label="关联集群" prop="clusterId" :formatter="formatCluster"></el-table-column>
+        <el-table-column label="手机号" prop="phone"></el-table-column>
+        <el-table-column label="邮箱" prop="email"></el-table-column>
+        <el-table-column label="超级管理员">
+            <template slot-scope="scope">
+                <el-tag v-if="scope.row.isSuperAdmin" type="danger">超级管理员</el-tag>
+                <span v-else>-</span>
+            </template>
+        </el-table-column>
+        <el-table-column label="启用状态">
+            <template slot-scope="scope">
+                <el-switch
+                        v-model="scope.row.enable"
+                        :active-value="true"
+                        :inactive-value="false"
+                        @change="handleStatusChange(scope.row)"
+                        :disabled = "scope.row.isSuperAdmin"
+                ></el-switch>
+            </template>
+        </el-table-column>
+        <el-table-column label="最近登录" prop="lastLoginTime" width="250"></el-table-column>
+        <el-table-column label="创建时间" prop="createAt" width="250"></el-table-column>
+        <el-table-column label="操作" width="300">
+            <template slot-scope="scope">
+                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" v-if="!scope.row.isSuperAdmin">编辑</el-button>
+                <el-button size="small" icon="el-icon-s-tools" @click="openAssignRole(scope.row)" v-if="!scope.row.isSuperAdmin" title="分配角色">授权</el-button>
+                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" v-if="!scope.row.isSuperAdmin">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <!-- 分页 -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageNum"
+            :page-sizes="[10, 20, 50]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            style="margin-top:15px;text-align:right;"
+    ></el-pagination>
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="50%">
+        <el-form ref="form" :model="formData" label-width="140px" :rules="rules">
+            <el-row :gutter="10">
+                <el-col :span="12">
+                    <el-form-item label="登录账号" prop="username">
+                        <el-input v-model="formData.username" placeholder="请输入账号"></el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="中文名" prop="chineseName">
+                        <el-input v-model="formData.chineseName" placeholder="请输入姓名"></el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+                <el-col :span="12">
+                    <el-form-item label="手机号">
+                        <el-input v-model="formData.phone"></el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="邮箱">
+                        <el-input v-model="formData.email"></el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+
+            <el-row :gutter="20" v-show="formData.id == null">
+                <el-col :span="12">
+                    <el-form-item label="密码" prop="password" :rules="[{required:true, message:'请输入管理员密码',trigger:'blur'}]">
+                        <el-input v-model="formData.password" show-password placeholder="请输入密码"></el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="确认密码" prop="confirmPwd" :rules="[{required:true,message:'请再次输入密码',trigger:'blur'}, {validator: checkPwd, trigger:'blur'}]">
+                        <el-input v-model="formData.confirmPwd" show-password placeholder="请输入密码"></el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+                <el-col :span="12">
+                    <el-form-item label="是否超级管理员">
+                        <el-switch v-model="formData.isSuperAdmin" active-text="是" inactive-text="否"></el-switch>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="启用状态">
+                        <el-switch v-model="formData.enable" active-text="启用" inactive-text="禁用"></el-switch>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+                <el-col :span="12">
+                    <el-form-item label="所属租户" prop="tenantName">
+                        <el-select v-model="formData.tenantName" placeholder="请选择租户" style="width:100%">
+                            <el-option
+                                    v-for="item in tenantList"
+                                    :key="item.tenantCode"
+                                    :label="item.tenantName"
+                                    :value="item.tenantCode"
+                            ></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="授权集群" prop="clusterId">
+                        <el-select v-model="formData.clusterId" placeholder="请选择集群" style="width:100%">
+                            <el-option
+                                    v-for="item in clusterList"
+                                    :key="item.id"
+                                    :label="item.clusterName"
+                                    :value="item.id"
+                            ></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+                <el-col :span="12">
+                    <el-form-item label="SSO用户ID">
+                        <el-input v-model="formData.ssoId" disabled ></el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitForm">确定</el-button>
+        </div>
+    </el-dialog>
+    <!-- 分配角色弹窗 -->
+    <el-dialog title="分配角色" :visible.sync="assignDialogVisible" width="520px">
+        <el-checkbox-group v-model="checkedRoleIds">
+            <el-checkbox v-for="item in allRoleList" :key="item.id" :label="item.id">
+                {{ item.roleName }}({{ item.roleCode }})
+            </el-checkbox>
+        </el-checkbox-group>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="assignDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="saveAssignRole">保存分配</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                // 分页
+                pageNum: 1,
+                pageSize: 10,
+                total: 0,
+                tableData: [],
+                // 租户下拉数据源
+                tenantList: [],
+                // 集群下拉数据源
+                clusterList: [],
+                // 新增编辑弹窗
+                dialogVisible: false,
+                dialogTitle: '新增用户',
+                isEdit: false,
+                formData: {
+                    id: null,
+                    username: '',
+                    passwordHash: '',
+                    password: '',
+                    confirmPwd: '',
+                    chineseName: '',
+                    ssoId: '',
+                    tenantName: 'zevent',
+                    clusterId: 1,
+                    phone: '',
+                    email: '',
+                    isSuperAdmin: false,
+                    enable: true
+                },
+                rules: {
+                    username: [{required: true, message: '账号不能为空', trigger: 'blur'}],
+                    chineseName: [{required: true, message: '姓名不能为空', trigger: 'blur'}],
+                    tenantName: [{required: true, message: '租户不能为空', trigger: 'blur'}],
+                    clusterId: [{required: true, message: '集群ID不能为空', trigger: 'blur'}]
+                },
+                // 分配角色弹窗
+                assignDialogVisible: false,
+                currentUserId: null,
+                allRoleList: [],
+                checkedRoleIds: []
+            }
+        },
+        mounted() {
+            this.loadTableData();
+            this.loadAllRole();
+            this.loadTenantAndCluster()
+        },
+        methods: {
+            // 加载租户与集群
+            async loadTenantAndCluster(){
+                this.tenantList = await loadTenant();
+                this.clusterList = await loadCluster();
+            },
+            // 密码校验
+            checkPwd(rule, value, callback) {
+                if (value !== this.formData.password) {
+                    return callback(new Error('两次输入密码不一致'));
+                }
+                callback();
+            },
+
+            // 加载用户列表
+            loadTableData() {
+                const _this = this;
+                $.get('/oop-user/page', {pageNum: _this.pageNum, pageSize: _this.pageSize}, res => {
+                    _this.tableData = res.data.content;
+                    _this.total = res.totalElements;
+                })
+            },
+            // 加载全部角色（分配弹窗使用）
+            loadAllRole() {
+                const _this = this;
+                $.get('/oop-role/all', res => {
+                    _this.allRoleList = res.data;
+                })
+            },
+            // 分页切换
+            handleSizeChange: PaginationUtil.handleSizeChange(this, this.loadTableData),
+            handleCurrentChange: PaginationUtil.handleCurrentChange(this, this.loadTableData),
+            // 新增弹窗
+            openAddDialog() {
+                this.dialogTitle = '新增用户';
+                this.isEdit = false;
+                this.formData = {
+                    id: null, username: '', chineseName: '', ssoId: '', tenantName: '',
+                    clusterId: '', phone: '', email: '', isSuperAdmin: false, enable: true
+                };
+                this.dialogVisible = true;
+                this.$nextTick(() => this.$refs.form.clearValidate());
+            },
+            // 编辑弹窗
+            openEditDialog(row) {
+                const _this = this;
+                $.get('/oop-user/get/' + row.id, res => {
+                    if (res.code === 200) {
+                        _this.formData = res.data;
+                        _this.dialogTitle = '编辑用户';
+                        _this.isEdit = true;
+                        _this.dialogVisible = true;
+                        _this.$nextTick(() => _this.$refs.form.clearValidate());
+                    } else {
+                        _this.$message.error(res.msg);
+                    }
+                })
+            },
+            // 提交保存用户
+            submitForm() {
+                const _this = this;
+                this.$refs.form.validate(valid => {
+                    if(!_this.formData.id){
+                        if (!valid) return;
+                    }
+                    if(!_this.formData.id){
+                        _this.formData.passwordHash = encryptRsa(_this.formData.password)
+                    }
+                    $.ajax({
+                        url: '/oop-user/save',
+                        type: 'POST',
+                        contentType: 'application/json;charset=utf-8',
+                        data: JSON.stringify(_this.formData),
+                        success: res => {
+                            if (res.code === 200) {
+                                _this.$message.success('保存成功');
+                                _this.dialogVisible = false;
+                                _this.loadTableData();
+                            } else {
+                                _this.$message.error(res.msg);
+                            }
+                        }
+                    })
+                })
+            },
+            // 删除用户
+            handleDelete(row) {
+                const _this = this;
+                this.$confirm('确定删除该用户？', '提示', {type: 'warning'}).then(() => {
+                    $.post('/oop-user/del/' + row.id, res => {
+                        if (res.code === 200) {
+                            _this.$message.success('删除成功');
+                            _this.loadTableData();
+                        } else {
+                            _this.$message.error(res.msg);
+                        }
+                    })
+                }).catch(() => {})
+            },
+            // 切换启用状态
+            handleStatusChange(row) {
+                const _this = this;
+                $.post('/oop-user/change-status', {id: row.id, enable: row.enable}, res => {
+                    if (res.code !== 200) {
+                        _this.$message.error(res.msg);
+                        _this.loadTableData();
+                    }
+                })
+            },
+            // 打开分配角色弹窗
+            openAssignRole(row) {
+                const _this = this;
+                _this.currentUserId = row.id;
+                _this.checkedRoleIds = [];
+                $.get('/oop-user/get-role-ids/' + row.id, res => {
+                    if (res.code === 200) {
+                        _this.checkedRoleIds = res.data;
+                        _this.assignDialogVisible = true;
+                    }
+                })
+            },
+            // 保存角色分配
+            saveAssignRole() {
+                const _this = this;
+                $.post('/oop-user/assign-role', {
+                    userId: _this.currentUserId,
+                    roleIds: _this.checkedRoleIds.join(',')
+                }, res => {
+                    if (res.code === 200) {
+                        _this.$message.success('角色分配成功');
+                        _this.assignDialogVisible = false;
+                    } else {
+                        _this.$message.error(res.msg);
+                    }
+                })
+            },
+            formatTenant(row){
+                const item = this.tenantList.find(t => t.tenantCode === row.tenantName);
+                return item ? item.tenantName : row.tenantName;
+            },
+            formatCluster(row){
+                const item = this.clusterList.find(c => c.id === row.clusterId);
+                return item ? item.clusterName : row.clusterId;
+            }
+        }
+    })
+</script>
+</body>
+</html>

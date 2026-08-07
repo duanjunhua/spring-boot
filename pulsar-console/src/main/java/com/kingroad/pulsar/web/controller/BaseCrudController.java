@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,6 +32,14 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
         this.repository = repository;
     }
 
+    /**
+     * 查询所有
+     */
+    @Log(operation = Log.OperationType.PAGE, description = "分页查询")
+    @GetMapping("/all")
+    public Result<List<T>> all() {
+        return Result.success(repository.findAll());
+    }
     /**
      * 分页查询
      */

@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.authorization.sso;
 
+import com.kingroad.pulsar.common.CommonConst;
 import com.kingroad.pulsar.domain.entity.SysRole;
 import com.kingroad.pulsar.domain.entity.SysUser;
 import com.kingroad.pulsar.domain.entity.SysUserRole;
@@ -61,7 +62,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             sysUser = service.saveOrUpdate(u);
 
             // 给予用户普通角色
-            SysRole role = roleService.findEntityByRoleCode("ROLE_USER");
+            SysRole role = roleService.findEntityByRoleCode(CommonConst.ROLE_USER);
             if(ObjectUtils.isNotEmpty(role)){
                 SysUserRole sysUserRole = new SysUserRole();
                 sysUserRole.setRoleId(role.getId());

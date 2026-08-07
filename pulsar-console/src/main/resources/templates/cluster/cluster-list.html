@@ -158,15 +158,8 @@
             },
 
             // 分页事件
-            handleSizeChange(val) {
-                this.pageSize = val;
-                this.pageNum = 1;
-                this.loadTableData();
-            },
-            handleCurrentChange(val) {
-                this.pageNum = val;
-                this.loadTableData();
-            },
+            handleSizeChange: PaginationUtil.handleSizeChange(this, this.loadTableData),
+            handleCurrentChange: PaginationUtil.handleCurrentChange(this, this.loadTableData),
 
             // 打开新增弹窗
             openAddDialog() {

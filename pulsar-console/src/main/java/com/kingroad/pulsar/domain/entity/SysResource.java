@@ -3,6 +3,8 @@ package com.kingroad.pulsar.domain.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @Author: Michael J H Duan[JunHua]
  * @Date: 2026-07-29 周三 15:49
@@ -41,7 +43,7 @@ public class SysResource extends BaseAuditEntity{
     /**
      * 资源类型（如 menu 菜单, button 按钮, api 接⼝）
      */
-    private String resourceType = ResourceType.OTHER.name();
+    private String resourceType = ResourceType.other.name();
 
     /**
      * 资源路径（如前端路由 /user/list 或后端接⼝/api/v1/users ）
@@ -62,6 +64,12 @@ public class SysResource extends BaseAuditEntity{
      * 资源类型
      */
     public enum ResourceType{
-        MENU, BUTTON, API, OTHER
+        content, menu, button, api, other
     }
+
+    /**
+     * 子（下级）资源
+     */
+    @Transient
+    public List<SysResource> children;
 }

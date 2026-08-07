@@ -4,6 +4,8 @@ import com.kingroad.pulsar.domain.entity.SysUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * @Author: Michael J H Duan[JunHua]
  * @Date: 2026-07-29 周三 16:32
@@ -13,8 +15,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SysUserRepository extends JpaRepository<SysUser,Long> {
 
-    SysUser findByUsername(String username);
+    Optional<SysUser> findByUsername(String username);
 
-    SysUser findBySsoId(String ssoId);
+    Optional<SysUser> findBySsoId(String ssoId);
 
 }

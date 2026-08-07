@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>资源权限管理</title>
+    <script th:src="@{/element/vue.js}"></script>
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <style>.toolbar {margin-bottom:15px;}</style>
+    <!-- RSA加密工具: 用于密码加密 -->
+    <script th:src="@{/js/encrypt/jsencrypt.min.js}"></script>
+    <!-- Common JS，需要先引入jsencrypt -->
+    <script th:src="@{/js/common.js}"></script>
+</head>
+<body>
+<div id="app">
+    <div class="toolbar">
+        <el-button type="primary" icon="el-icon-circle-plus-outline" @click="openAddDialog">新增顶级</el-button>
+    </div>
+    <!-- 树形表格 -->
+    <el-table
+            :data="treeData"
+            border
+            stripe
+            style="width:100%"
+            row-key="id"
+            :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+    >
+        <el-table-column label="资源名称" prop="resourceName"></el-table-column>
+        <el-table-column label="ID" prop="id" width="80" v-if="false"></el-table-column>
+        <el-table-column label="父级ID" prop="parentId" width="100"></el-table-column>
+        <el-table-column label="权限编码" prop="resourceCode"></el-table-column>
+        <el-table-column label="资源类型">
+            <template slot-scope="scope">
+                <el-tag v-if="scope.row.resourceType === 'content'" type="primary">目录</el-tag>
+                <el-tag v-else-if="scope.row.resourceType === 'menu'" type="success">菜单</el-tag>
+                <el-tag v-else-if="scope.row.resourceType === 'button'" type="warning">按钮</el-tag>
+                <el-tag v-else-if="scope.row.resourceType === 'api'" type="info">接口</el-tag>
+                <el-tag v-else type="info">其他</el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column label="路由/接口地址" prop="resourcePath"></el-table-column>
+        <el-table-column label="排序号" prop="sortOrder" width="80" v-if="false"></el-table-column>
+        <el-table-column label="启用状态">
+            <template slot-scope="scope">
+                <el-switch v-model="scope.row.enable" @change="handleStatusChange(scope.row)"></el-switch>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" width="300">
+            <template slot-scope="scope">
+                <el-button size="small" icon="el-icon-circle-plus-outline" @click="openAddChild(scope.row)" title="新增">新增</el-button>
+                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" title="编辑">编辑</el-button>
+                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" title="删除">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="50%">
+        <el-form ref="form" :model="formData" label-width="140px" :rules="rules">
+            <el-form-item label="父资源">
+                <el-input
+                        v-model="parentResourceName"
+                        readonly
+                        placeholder="上级资源"
+                        style="width:100%;"
+                >
+                    <template slot="append">
+                        <el-button icon="el-icon-arrow-down" @click="openTreeSelectDialog"></el-button>
+                    </template>
+                </el-input>
+                <el-button size="mini" @click="clearParentResource" style="margin-top:6px;">清空</el-button>
+            </el-form-item>
+            <el-form-item label="资源名称" prop="resourceName">
+                <el-input v-model="formData.resourceName"></el-input>
+            </el-form-item>
+            <el-form-item label="资源编码" prop="resourceCode">
+                <el-input v-model="formData.resourceCode" placeholder="user:list、user:add"></el-input>
+            </el-form-item>
+            <el-form-item label="资源类型" prop="resourceType">
+                <el-select v-model="formData.resourceType">
+                    <el-option label="目录" value="content"></el-option>
+                    <el-option label="菜单" value="menu"></el-option>
+                    <el-option label="按钮" value="button"></el-option>
+                    <el-option label="接口" value="api"></el-option>
+                    <el-option label="其他" value="other"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="路由/接口路径">
+                <el-input v-model="formData.resourcePath" placeholder="/user"></el-input>
+            </el-form-item>
+            <el-form-item label="排序号" prop="sortOrder">
+                <el-input-number v-model="formData.sortOrder" :min="0"></el-input-number>
+            </el-form-item>
+            <el-form-item label="启用状态">
+                <el-switch v-model="formData.enable" active-text="启用" inactive-text="禁用"></el-switch>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button @click="dialogVisible=false">取消</el-button>
+            <el-button type="primary" @click="submitForm">确定</el-button>
+        </div>
+    </el-dialog>
+
+    <!-- 树形选择父资源弹窗【增加搜索框】 -->
+    <el-dialog title="选择父级资源" :visible.sync="treeSelectVisible" width="480px">
+        <el-input
+                placeholder="输入资源名称搜索"
+                v-model="treeFilterText"
+                prefix-icon="el-icon-search"
+                style="margin-bottom:10px;"
+                clearable
+        ></el-input>
+        <el-tree
+                ref="treeSelect"
+                :data="parentTreeList"
+                node-key="id"
+                default-expand-all
+                :props="{children:'children',label:'resourceName'}"
+                highlight-current
+                :filter-node-method="filterNode"
+        >
+        </el-tree>
+        <div slot="footer">
+            <el-button @click="treeSelectVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmSelectParent">确定</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script>
+    new Vue({
+        el:'#app',
+        data(){
+            return {
+                treeData:[],
+                dialogVisible:false,dialogTitle:'新增顶级资源',isEdit:false,
+                parentTreeList:[],
+                treeSelectVisible:false,
+                parentResourceName:'',
+                treeFilterText:'', // 树搜索关键词
+                formData:{
+                    id:null,parentId:null,resourceName:'',resourceCode:'',
+                    resourceType:'other',resourcePath:'',sortOrder:0,enable:true
+                },
+                rules:{
+                    resourceName:[{required:true,message:'资源名称必填',trigger:'blur'}],
+                    resourceCode:[{required:true,message:'权限编码必填',trigger:'blur'}],
+                    resourceType:[{required:true,message:'请选择资源类型',trigger:'change'}]
+                }
+            }
+        },
+        watch:{
+            // 监听搜索词，自动过滤树
+            treeFilterText(val){
+                this.$refs.treeSelect.filter(val);
+            }
+        },
+        mounted(){
+            this.loadTreeData();
+            this.loadParentSelectTree();
+        },
+        methods:{
+            // 树过滤方法
+            filterNode(value, data) {
+                if (!value) return true;
+                return data.resourceName.indexOf(value) !== -1;
+            },
+
+            loadTreeData(){
+                const _this=this;
+                $.get('/oop-res/tree',res=>{
+                    _this.treeData = res.data;
+                })
+            },
+            loadParentSelectTree(){
+                const _this=this;
+                $.get('/oop-res/tree',res=>{
+                    _this.parentTreeList=res.data;
+                })
+            },
+
+            openTreeSelectDialog(){
+                this.treeSelectVisible = true;
+                this.treeFilterText = ''; // 打开弹窗清空搜索
+                this.$nextTick(()=>{
+                    if(this.$refs.treeSelect && this.formData.parentId){
+                        this.$refs.treeSelect.setCurrentKey(this.formData.parentId);
+                    }
+                })
+            },
+            confirmSelectParent(){
+                const selectedNode = this.$refs.treeSelect.getCurrentNode();
+                if(!selectedNode){
+                    this.$message.warning("请选择父资源！");
+                    return;
+                }
+                // 禁止选择自身（防止循环嵌套）
+                if(this.formData.id && selectedNode.id === this.formData.id){
+                    this.$message.warning("不能将自身作为父资源！");
+                    return;
+                }
+                this.formData.parentId = selectedNode.id;
+                this.parentResourceName = selectedNode.resourceName;
+                this.treeSelectVisible = false;
+            },
+            clearParentResource(){
+                this.formData.parentId = null;
+                this.parentResourceName = '';
+                if(this.$refs.treeSelect){
+                    this.$refs.treeSelect.setCurrentKey(null);
+                }
+            },
+
+            openAddDialog(){
+                this.dialogTitle='新增顶级资源';
+                this.isEdit=false;
+                this.formData={
+                    id:null,parentId:null,resourceName:'',resourceCode:'',
+                    resourceType:'OTHER',resourcePath:'',sortOrder:0,enable:true
+                };
+                this.parentResourceName = '';
+                this.dialogVisible=true;
+                this.$nextTick(()=>this.$refs.form.clearValidate());
+            },
+            openAddChild(row){
+                this.dialogTitle='新增子资源';
+                this.isEdit=false;
+                this.formData={
+                    id:null,parentId:row.id,resourceName:'',resourceCode:'',
+                    resourceType:'OTHER',resourcePath:'',sortOrder:0,enable:true
+                };
+                this.parentResourceName = row.resourceName;
+                this.dialogVisible=true;
+                this.$nextTick(()=>this.$refs.form.clearValidate());
+            },
+            openEditDialog(row){
+                const _this=this;
+                $.get('/oop-res/get/'+row.id,res=>{
+                    if(res.code===200){
+                        _this.formData=res.data;
+                        _this.dialogTitle='编辑资源';
+                        _this.isEdit=true;
+                        if(_this.formData.parentId){
+                            _this.findNodeName(_this.parentTreeList, _this.formData.parentId);
+                        }else{
+                            _this.parentResourceName = '';
+                        }
+                        _this.dialogVisible=true;
+                        _this.$nextTick(()=>_this.$refs.form.clearValidate());
+                    }else _this.$message.error(res.msg);
+                })
+            },
+            // 递归查找节点名称
+            findNodeName(treeList, targetId){
+                for(let node of treeList){
+                    if(node.id === targetId){
+                        this.parentResourceName = node.resourceName;
+                        return true;
+                    }
+                    if(node.children && node.children.length>0){
+                        if(this.findNodeName(node.children, targetId)){
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+            submitForm(){
+                const _this=this;
+                this.$refs.form.validate(valid=>{
+                    if(!valid) return;
+                    $.ajax({
+                        url:'/oop-res/save',
+                        type:'POST',
+                        contentType:'application/json;charset=utf-8',
+                        data:JSON.stringify(_this.formData),
+                        success:res=>{
+                            if(res.code===200){
+                                _this.$message.success('保存成功');
+                                _this.dialogVisible=false;
+                                _this.loadTreeData();
+                                _this.loadParentSelectTree();
+                            }else _this.$message.error(res.msg);
+                        }
+                    })
+                })
+            },
+            handleDelete(row){
+                const _this=this;
+                this.$confirm('删除后子资源会一并清空，确认删除？','危险提示',{type:'error'}).then(()=>{
+                    $.post('/oop-res/del/'+row.id,res=>{
+                        if(res.code===200){
+                            _this.$message.success('删除成功');
+                            _this.loadTreeData();
+                            _this.loadParentSelectTree();
+                        }else _this.$message.error(res.msg);
+                    })
+                }).catch(()=>{})
+            },
+            handleStatusChange(row){
+                const _this=this;
+                $.post('/oop-res/change-status',{id:row.id,enable:row.enable},res=>{
+                    if(res.code!==200){
+                        _this.$message.error(res.msg);
+                        _this.loadTreeData();
+                    }
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

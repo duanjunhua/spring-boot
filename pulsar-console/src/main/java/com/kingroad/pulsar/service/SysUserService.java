@@ -1,8 +1,8 @@
 package com.kingroad.pulsar.service;
 
 import com.kingroad.pulsar.common.PageResult;
-import com.kingroad.pulsar.domain.entity.SysRole;
 import com.kingroad.pulsar.domain.entity.SysUser;
+import com.kingroad.pulsar.domain.entity.SysUserRole;
 import com.kingroad.pulsar.exception.BusinessException;
 import com.kingroad.pulsar.repository.SysUserRepository;
 import com.kingroad.pulsar.repository.SysUserRoleRepository;
@@ -16,9 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @Author: Michael J H Duan[JunHua]
@@ -39,6 +39,9 @@ public class SysUserService {
 
     @Resource
     SysResourceService resService;
+
+    @Resource
+    SysUserRoleRepository userRoleRepository;
 
     /**
      * 分页查询
@@ -68,14 +71,11 @@ public class SysUserService {
      * 根据ID获取对象
      */
     public SysUser findEntityById(Long id) {
-        Optional<SysUser> user = repository.findById(id);
-        if(user.isPresent()) {
-            SysUser u =  user.get();
-            u.setResList(resService.findByUserId(u.getId()));
-            u.setRoleList(roleService.findByUserId(u.getId()));
-            return u;
-        }
-        return null;
+        SysUser user = repository.findById(id).orElseThrow(() -> new BusinessException("用户不存在"));
+
+        user.setResList(resService.findByUserId(user.getId()));
+        user.setRoleList(roleService.findByUserId(user.getId()));
+        return user;
     }
 
     /**
@@ -83,7 +83,7 @@ public class SysUserService {
      * @param username 用户登录名
      */
     public SysUser findEntityByUsername(String username) {
-        SysUser u = repository.findByUsername(username);
+        SysUser u = repository.findByUsername(username).orElse(null);
         if(ObjectUtils.isEmpty(u)) return null;
 
         u.setResList(resService.findByUserId(u.getId()));
@@ -96,7 +96,7 @@ public class SysUserService {
      * @param ssoId sso ID
      */
     public SysUser findEntityBySsoId(String ssoId) {
-        SysUser u = repository.findBySsoId(ssoId);
+        SysUser u = repository.findBySsoId(ssoId).orElse(null);
 
         if(ObjectUtils.isEmpty(u)) return null;
 
@@ -118,5 +118,46 @@ public class SysUserService {
             u.setResList(resService.findByUserId(u.getId()));
         });
         return us;
+    }
+
+    /**
+     * 删除用户
+     * @param id 用户ID
+     */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
+    /**
+     * 用户状态切换
+     * @param id 用户ID
+     */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public SysUser changeStatus(Long id, Boolean enable) {
+        SysUser u = repository.findById(id).orElseThrow(() -> new BusinessException("用户不存在"));
+        u.setEnable(enable);
+        return repository.save(u);
+    }
+
+    /**
+     * 用户分配角色
+     */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public void assignRole(Long userId, List<Long> roleIds) {
+
+        if(ObjectUtils.isEmpty(userId)) return;
+
+        userRoleRepository.deleteAllByUserId(userId);
+
+        List<SysUserRole> roleResList = new ArrayList<>(roleIds.size());
+
+        if(CollectionUtils.isEmpty(roleIds))  return;
+
+        roleIds.forEach(roleId -> {
+            roleResList.add(new SysUserRole(userId, roleId));
+        });
+
+        userRoleRepository.saveAll(roleResList);
     }
 }

@@ -4,6 +4,8 @@ import com.kingroad.pulsar.domain.entity.SysRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * @Author: Michael J H Duan[JunHua]
  * @Date: 2026-07-29 周三 16:32
@@ -13,6 +15,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SysRoleRepository extends JpaRepository<SysRole,Long> {
 
-    SysRole findByRoleCode(String roleCode);
+    Optional<SysRole> findByRoleCode(String roleCode);
 
 }

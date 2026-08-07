@@ -2,19 +2,23 @@ package com.kingroad.pulsar.service;
 
 import com.kingroad.pulsar.common.PageResult;
 import com.kingroad.pulsar.domain.entity.SysRole;
+import com.kingroad.pulsar.domain.entity.SysRoleResource;
 import com.kingroad.pulsar.domain.entity.SysUserRole;
 import com.kingroad.pulsar.exception.BusinessException;
 import com.kingroad.pulsar.repository.SysRoleRepository;
+import com.kingroad.pulsar.repository.SysRoleResourceRepository;
 import com.kingroad.pulsar.repository.SysUserRoleRepository;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,6 +38,9 @@ public class SysRoleService {
 
     @Resource
     SysUserRoleRepository userRoleRepository;
+
+    @Resource
+    SysRoleResourceRepository roleResRepository;
 
     /**
      * 分页查询
@@ -70,7 +77,7 @@ public class SysRoleService {
      * 根据ID获取对象
      */
     public SysRole findEntityByRoleCode(String roleCode) {
-        return repository.findByRoleCode(roleCode);
+        return repository.findByRoleCode(roleCode).orElse(null);
     }
 
     /**
@@ -84,6 +91,59 @@ public class SysRoleService {
         if(CollectionUtils.isEmpty(urs) || urs.size() == 0) return Collections.emptyList();
 
         return repository.findAllById(urs.stream().map(SysUserRole::getRoleId).toList());
+    }
 
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
+    /**
+     * 根据角色查询已分配资源
+     */
+    public List<SysRoleResource> findRoleResByRoleId(Long roleId) {
+        return roleResRepository.findByRoleId(roleId);
+    }
+
+    /**
+     * 角色分配资源
+     */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public void assignResource(Long roleId, List<Long> resIds) {
+
+        if(ObjectUtils.isEmpty(resIds)) return;
+
+        roleResRepository.deleteAllByRoleId(roleId);
+
+        List<SysRoleResource> roleResList = new ArrayList<>(resIds.size());
+
+        if(CollectionUtils.isEmpty(resIds))  return;
+
+        resIds.forEach(resId -> {
+            roleResList.add(new SysRoleResource(roleId, resId));
+        });
+
+        roleResRepository.saveAll(roleResList);
+    }
+
+    /**
+     * 角色分配用户
+     */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public void assignUser(Long roleId, List<Long> userIds) {
+
+        if(ObjectUtils.isEmpty(userIds)) return;
+
+        userRoleRepository.deleteAllByRoleId(roleId);
+
+        List<SysUserRole> roleResList = new ArrayList<>(userIds.size());
+
+        if(CollectionUtils.isEmpty(userIds))  return;
+
+        userIds.forEach(uId -> {
+            roleResList.add(new SysUserRole(uId, roleId));
+        });
+
+        userRoleRepository.saveAll(roleResList);
     }
 }

@@ -12,6 +12,8 @@
     <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
     <!-- RSA加密工具: 用于密码加密 -->
     <script th:src="@{/js/encrypt/jsencrypt.min.js}"></script>
+    <!-- Common JS，需要先引入jsencrypt -->
+    <script th:src="@{/js/common.js}"></script>
     <style>
         body {
             margin: 0;
@@ -162,7 +164,7 @@
             return {
                 currentStep: 0,
                 formStep1: {
-                    username: 'admin',
+                    username: 'superadmin',
                     passwordHash: '',
                     confirmPwd: ''
                 },
@@ -194,27 +196,8 @@
         },
         created() {
             this.buildRule();
-            this.loadPublicKey();
         },
         methods: {
-            // 获取后端RSA公钥
-            loadPublicKey() {
-                $.get("/rsa/get-pubkey", res => {
-                    if(res.success) {
-                        this.publicKey = res.data.replaceAll("\\\\n", "\n");
-                        console.log("公钥：" + this.publicKey);
-                    }
-                })
-            },
-
-            // ========= RSA加密密码 =========
-            encryptPwd(){
-                const vm = this;
-                const encrypt = new JSEncrypt();
-                encrypt.setPublicKey(vm.publicKey);
-                return encrypt.encrypt(vm.formStep1.passwordHash);
-            },
-
             checkPwd(rule, value, callback) {
                 if (value !== this.formStep1.passwordHash) {
                     return callback(new Error('两次输入密码不一致'));
@@ -247,7 +230,7 @@
                     if(!valid) return;
 
                     const postData = {
-                        passwordHash: vm.encryptPwd(),
+                        passwordHash: encryptRsa(vm.formStep1.passwordHash),
                         ssoEnable: this.formStep2.ssoEnable,
                         clientId: this.formStep2.clientId,
                         clientSecret: this.formStep2.clientSecret,

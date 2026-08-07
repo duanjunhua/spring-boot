@@ -23,4 +23,11 @@ public class CommonConst {
 
     public static final String DEFAULT_PULSAR_ADMIN_AUTH_PLUGIN = "org.apache.pulsar.client.impl.auth.AuthenticationToken";
 
+    /*-------------- 角色编码 ----------------*/
+    // 管理员
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
+    // 普通用户
+    public static final String ROLE_USER = "ROLE_USER";
+    // 只读用户
+    public static final String ROLE_READ = "ROLE_READ";
 }

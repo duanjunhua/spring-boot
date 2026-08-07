@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>角色管理</title>
+    <script th:src="@{/element/vue.js}"></script>
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <style>.toolbar {margin-bottom: 15px;}</style>
+    <!-- RSA加密工具: 用于密码加密 -->
+    <script th:src="@{/js/encrypt/jsencrypt.min.js}"></script>
+    <!-- Common JS，需要先引入jsencrypt -->
+    <script th:src="@{/js/common.js}"></script>
+</head>
+<body>
+<div id="app">
+    <div class="toolbar">
+        <el-button type="primary" icon="el-icon-plus" @click="openAddDialog">新增角色</el-button>
+    </div>
+    <el-table :data="tableData" border stripe style="width:100%">
+        <el-table-column label="ID" prop="id" width="80" v-if="false"></el-table-column>
+        <el-table-column label="角色名称" prop="roleName"></el-table-column>
+        <el-table-column label="角色编码" prop="roleCode"></el-table-column>
+        <el-table-column label="角色描述" prop="description"></el-table-column>
+        <el-table-column label="创建时间" prop="createAt" width="300"></el-table-column>
+        <el-table-column label="操作" width="300">
+            <template slot-scope="scope">
+                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" title="编辑">编辑</el-button>
+                <el-button size="small" icon="el-icon-s-tools" @click="openAssignRes(scope.row)" title="资源授权">授权</el-button>
+                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" title="删除">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageNum"
+            :page-sizes="[10,20,50]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            style="margin-top:15px;text-align:right;"
+    ></el-pagination>
+    <!-- 新增编辑弹窗 -->
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="30%">
+        <el-form ref="form" :model="formData" label-width="120px" :rules="rules">
+            <el-form-item label="角色名称" prop="roleName">
+                <el-input v-model="formData.roleName"></el-input>
+            </el-form-item>
+            <el-form-item label="角色唯一编码" prop="roleCode">
+                <el-input v-model="formData.roleCode" placeholder="ROLE_ADMIN、ROLE_USER、ROLE_GUEST"></el-input>
+            </el-form-item>
+            <el-form-item label="角色描述">
+                <el-input v-model="formData.description" type="textarea" rows="3"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button @click="dialogVisible=false">取消</el-button>
+            <el-button type="primary" @click="submitForm">确定</el-button>
+        </div>
+    </el-dialog>
+    <!-- 分配资源树形弹窗 -->
+    <el-dialog title="分配权限资源" :visible.sync="assignDialogVisible" width="660px">
+        <el-tree
+                :data="resourceTree"
+                show-checkbox
+                node-key="id"
+                ref="tree"
+                :props="{label: 'resourceName'}"
+                :default-checked-keys="checkedResIds"
+                default-expand-all
+        ></el-tree>
+        <div slot="footer">
+            <el-button @click="assignDialogVisible=false">取消</el-button>
+            <el-button type="primary" @click="saveAssignRes">保存权限</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script>
+    new Vue({
+        el:'#app',
+        data(){
+            return {
+                pageNum:1,pageSize:10,total:0,tableData:[],
+                dialogVisible:false,dialogTitle:'新增角色',isEdit:false,
+                formData:{id:null,roleName:'',roleCode:'',description:''},
+                rules:{
+                    roleName:[{required:true,message:'角色名称必填',trigger:'blur'}],
+                    roleCode:[{required:true,message:'角色编码必填',trigger:'blur'}]
+                },
+                assignDialogVisible:false,currentRoleId:null,
+                resourceTree:[],checkedResIds:[]
+            }
+        },
+        mounted(){
+            this.loadTableData();
+            this.loadAllResourceTree();
+        },
+        methods:{
+            loadTableData(){
+                const _this=this;
+                $.get('/oop-role/page',{pageNum:_this.pageNum,pageSize:_this.pageSize},res=>{
+                    _this.tableData=res.data.content;
+                    _this.total=res.totalElements;
+                })
+            },
+            loadAllResourceTree(){
+                const _this=this;
+                $.get('/oop-res/tree',res=>{
+                    _this.resourceTree = res.data;
+                })
+            },
+
+            handleSizeChange: PaginationUtil.handleSizeChange(this, this.loadTableData),
+            handleCurrentChange: PaginationUtil.handleCurrentChange(this, this.loadTableData),
+
+            openAddDialog(){
+                this.dialogTitle='新增角色';this.isEdit=false;
+                this.formData={id:null,roleName:'',roleCode:'',description:''};
+                this.dialogVisible=true;
+                this.$nextTick(()=>this.$refs.form.clearValidate());
+            },
+            openEditDialog(row){
+                const _this=this;
+                $.get('/oop-role/get/'+row.id,res=>{
+                    if(res.code===200){
+                        _this.formData=res.data;
+                        _this.dialogTitle='编辑角色';
+                        _this.isEdit=true;
+                        _this.dialogVisible=true;
+                        _this.$nextTick(()=>_this.$refs.form.clearValidate());
+                    }else _this.$message.error(res.msg);
+                })
+            },
+            submitForm(){
+                const _this=this;
+                this.$refs.form.validate(valid=>{
+                    if(!valid) return;
+                    $.ajax({
+                        url:'/oop-role/save',
+                        type:'POST',
+                        contentType:'application/json;charset=utf-8',
+                        data:JSON.stringify(_this.formData),
+                        success:res=>{
+                            if(res.code===200){
+                                _this.$message.success('保存成功');
+                                _this.dialogVisible=false;
+                                _this.loadTableData();
+                            }else _this.$message.error(res.msg);
+                        }
+                    })
+                })
+            },
+            handleDelete(row){
+                const _this=this;
+                this.$confirm('确定删除该角色？关联权限将清空','提示',{type:'warning'}).then(()=>{
+                    $.post('/oop-role/del/'+row.id,res=>{
+                        if(res.code === 200){
+                            _this.$message.success('删除成功');
+                            _this.loadTableData();
+                        }else _this.$message.error(res.msg);
+                    })
+                }).catch(()=>{})
+            },
+            openAssignRes(row){
+                const _this=this;
+                _this.currentRoleId=row.id;
+                _this.checkedResIds=[];
+                $.get('/oop-role/get-res-ids/' + row.id,res=>{
+                    if(res.code === 200){
+                        _this.checkedResIds=res.data;
+                        _this.assignDialogVisible=true;
+                    }
+                })
+            },
+            saveAssignRes(){
+                const _this=this;
+                let ids=_this.$refs.tree.getCheckedKeys();
+                $.post('/oop-role/assign-res',{
+                    roleId:_this.currentRoleId,
+                    resIds:ids.join(',')
+                },res=>{
+                    if(res.code===200){
+                        _this.$message.success('权限分配成功');
+                        _this.assignDialogVisible=false;
+                    }else _this.$message.error(res.msg);
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

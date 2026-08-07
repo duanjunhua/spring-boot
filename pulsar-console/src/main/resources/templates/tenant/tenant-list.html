@@ -142,16 +142,9 @@
             },
 
             // 每页条数切换
-            sizeChange(val) {
-                this.pageSize = val;
-                this.pageNum = 1;
-                this.loadData();
-            },
+            sizeChange: PaginationUtil.handleSizeChange(this, this.loadData),
             // 页码切换
-            currentChange(val) {
-                this.pageNum = val;
-                this.loadData();
-            },
+            currentChange: PaginationUtil.handleCurrentChange(this, this.loadData),
 
             // 打开新增弹窗
             openAdd() {

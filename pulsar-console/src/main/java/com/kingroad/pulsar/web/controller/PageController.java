@@ -60,16 +60,44 @@ public class PageController {
         }
     }
 
-    // 登录成功首页
+    /**
+     * 集群
+     */
     @GetMapping("/cluster")
     public String cluster() {
         return "cluster/cluster-list";
     }
 
-    // 登录成功首页
+    /**
+     * 租户
+     */
     @GetMapping("/tenant")
     public String tenant() {
         return "tenant/tenant-list";
+    }
+
+    /**
+     * 用户
+     */
+    @GetMapping("/user")
+    public String user() {
+        return "user/user-list";
+    }
+
+    /**
+     * 角色
+     */
+    @GetMapping("/role")
+    public String role() {
+        return "role/role-list";
+    }
+
+    /**
+     * 资源
+     */
+    @GetMapping("/res")
+    public String res() {
+        return "res/res-list";
     }
 
 }

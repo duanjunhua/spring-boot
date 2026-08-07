@@ -2,6 +2,9 @@ package com.kingroad.pulsar.repository;
 
 import com.kingroad.pulsar.domain.entity.SysRoleResource;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,5 +23,11 @@ public interface SysRoleResourceRepository extends JpaRepository<SysRoleResource
      * @param roleId 角色ID
      */
     List<SysRoleResource> findByRoleId(Long roleId);
+
+    /**
+     * 根据角色ID清空关联资源
+     */
+    @Modifying
+    void deleteAllByRoleId(Long roleId);
 
 }
