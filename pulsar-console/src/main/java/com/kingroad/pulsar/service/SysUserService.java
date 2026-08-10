@@ -160,4 +160,12 @@ public class SysUserService {
 
         userRoleRepository.saveAll(roleResList);
     }
+
+    /**
+     * 用户分配角色
+     */
+    @Transactional(readOnly = false, rollbackFor = BusinessException.class)
+    public void resetPassword(Long userId, String newPassword) {
+        repository.updatePasswordHashByUserId(userId, newPassword);
+    }
 }

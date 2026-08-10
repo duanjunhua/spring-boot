@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>第三方用户权限申请管理</title>
+    <!-- Vue2 -->
+    <script th:src="@{/element/vue.js}"></script>
+    <!-- ElementUI CSS+JS -->
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <!-- jQuery 3.7 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <style>
+        .search-bar {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #fff;
+            border-radius: 4px;
+        }
+        .search-item {
+            display: inline-block;
+            margin: 6px 12px 6px 0;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- 查询区域 -->
+    <div class="search-bar">
+        <div class="search-item">
+            <label>用户名：</label>
+            <el-input v-model="query.username" placeholder="请输入用户名" size="small" style="width:160px"></el-input>
+        </div>
+        <div class="search-item">
+            <label>第三方ID：</label>
+            <el-input v-model="query.ssoId" placeholder="第三方SSO ID" size="small" style="width:180px"></el-input>
+        </div>
+        <div class="search-item">
+            <label>审批状态：</label>
+            <el-select v-model="query.status" placeholder="全部" size="small" style="width:140px">
+                <el-option label="审批中" value="APPLYING"></el-option>
+                <el-option label="已批准" value="APPROVED"></el-option>
+                <el-option label="已驳回" value="REJECTED"></el-option>
+            </el-select>
+        </div>
+        <div class="search-item">
+            <label>申请时间：</label>
+            <el-date-picker v-model="query.startTime" type="datetime" placeholder="开始时间" size="small" style="width:180px"></el-date-picker>
+            <span> ~ </span>
+            <el-date-picker v-model="query.endTime" type="datetime" placeholder="结束时间" size="small" style="width:180px"></el-date-picker>
+        </div>
+        <div class="search-item">
+            <el-button type="primary" icon="el-icon-search" @click="loadData">查询</el-button>
+            <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+        </div>
+    </div>
+
+    <!-- 列表 -->
+    <el-table :data="tableData" border stripe style="width:100%">
+        <el-table-column label="ID" prop="id" width="80"></el-table-column>
+        <el-table-column label="第三方SSO ID" prop="ssoId"></el-table-column>
+        <el-table-column label="申请时间" prop="applyTime" width="200"></el-table-column>
+        <el-table-column label="申请理由" prop="applyReason" show-overflow-tooltip></el-table-column>
+        <el-table-column label="审批状态" prop="status" width="120">
+            <template slot-scope="scope">
+                <el-tag v-if="scope.row.status === 'APPLYING'" type="warning">审批中</el-tag>
+                <el-tag v-if="scope.row.status === 'APPROVED'" type="success">已批准</el-tag>
+                <el-tag v-if="scope.row.status === 'REJECTED'" type="danger">已驳回</el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column label="审批意见" prop="approvalOpinion" show-overflow-tooltip></el-table-column>
+        <el-table-column label="操作" width="300">
+            <template slot-scope="scope">
+                <el-button size="small" icon="el-icon-view" @click="openDetail(scope.row)">查看</el-button>
+                <el-button size="small" type="primary" icon="el-icon-check" @click="openAudit(scope.row,'APPROVED')" v-if="scope.row.status === 'APPLYING'">批准</el-button>
+                <el-button size="small" type="danger" icon="el-icon-close" @click="openAudit(scope.row,'REJECTED')" v-if="scope.row.status === 'APPLYING'">驳回</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageNum"
+            :page-size="pageSize"
+            :page-sizes="[10,20,50]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            style="margin-top:15px;text-align:right;">
+    </el-pagination>
+
+    <!-- 详情弹窗 -->
+    <el-dialog title="申请详情" :visible.sync="detailVisible" width="600px">
+        <el-form :model="detailForm" label-width="120px">
+            <el-form-item label="用户名">
+                <el-input v-model="detailForm.username" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="第三方SSO ID">
+                <el-input v-model="detailForm.ssoId" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="申请时间">
+                <el-input v-model="detailForm.applyTime" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="申请理由">
+                <el-input v-model="detailForm.applyReason" type="textarea" rows="4" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="审批状态">
+                <el-input v-model="detailForm.statusText" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="审批意见">
+                <el-input v-model="detailForm.approvalOpinion" type="textarea" rows="3" disabled></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button @click="detailVisible=false">关闭</el-button>
+        </div>
+    </el-dialog>
+
+    <!-- 审批弹窗（批准/驳回填写意见） -->
+    <el-dialog :title="auditTitle" :visible.sync="auditVisible" width="520px">
+        <el-form ref="auditForm" :model="auditForm" label-width="110px">
+            <el-form-item label="审批意见" prop="approvalOpinion">
+                <el-input v-model="auditForm.approvalOpinion" type="textarea" :rows="5" placeholder="请填写审批意见"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button @click="auditVisible=false">取消</el-button>
+            <el-button type="primary" @click="submitAudit">确认提交</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    new Vue({
+        el:'#app',
+        data(){
+            return {
+                // 查询条件
+                query:{
+                    username:'',
+                    ssoId:'',
+                    status:'',
+                    startTime:'',
+                    endTime:''
+                },
+                //分页
+                pageNum:1,
+                pageSize:10,
+                total:0,
+                tableData:[],
+
+                //详情弹窗
+                detailVisible:false,
+                detailForm:{},
+
+                //审批弹窗
+                auditVisible:false,
+                auditTitle:'',
+                targetId:null,
+                auditStatus:'',
+                auditForm:{
+                    approvalOpinion:''
+                }
+            }
+        },
+        mounted(){
+            this.loadData();
+        },
+        methods:{
+            loadData(){
+                const _this = this;
+                $.get('/sso/user/apply/page',{
+                    pageNum:_this.pageNum,
+                    pageSize:_this.pageSize,
+                    username:_this.query.username,
+                    ssoId:_this.query.ssoId,
+                    status:_this.query.status,
+                    startTime:_this.query.startTime,
+                    endTime:_this.query.endTime
+                },res=>{
+                    if(res.code===200){
+                        _this.tableData = res.data.content;
+                        _this.total = res.data.totalElements;
+                    }else{
+                        _this.$message.error(res.msg);
+                    }
+                })
+            },
+            resetQuery(){
+                this.query = {username:'',ssoId:'',status:'',startTime:'',endTime:''};
+                this.pageNum = 1;
+                this.loadData();
+            },
+            handleSizeChange(size){
+                this.pageSize = size;
+                this.pageNum = 1;
+                this.loadData();
+            },
+            handleCurrentChange(page){
+                this.pageNum = page;
+                this.loadData();
+            },
+            openDetail(row){
+                this.detailForm = JSON.parse(JSON.stringify(row));
+                //状态文本转换
+                if(row.status==='APPLYING') this.detailForm.statusText='审批中';
+                if(row.status==='APPROVED') this.detailForm.statusText='已批准';
+                if(row.status==='REJECTED') this.detailForm.statusText='已驳回';
+                this.detailVisible = true;
+            },
+            openAudit(row, status){
+                this.targetId = row.id;
+                this.auditStatus = status;
+                this.auditForm.approvalOpinion = '';
+                this.auditTitle = status==='APPROVED' ? '批准申请' : '驳回申请';
+                this.auditVisible = true;
+            },
+            submitAudit(){
+                const _this = this;
+                if(!_this.auditForm.approvalOpinion.trim()){
+                    _this.$message.warning('请填写审批意见');
+                    return;
+                }
+                $.post({
+                    url:'/sso/user/apply/audit',
+                    type:'POST',
+                    contentType:'application/json;charset=utf-8',
+                    data:  JSON.stringify({
+                        id: _this.targetId,
+                        status: _this.auditStatus,
+                        opinion: _this.auditForm.approvalOpinion
+                    }),
+                    success(res){
+                        if(res.code===200){
+                            _this.$message.success('操作成功');
+                            _this.auditVisible = false;
+                            _this.loadData();
+                        }else{
+                            _this.$message.error(res.msg);
+                        }
+                    }
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

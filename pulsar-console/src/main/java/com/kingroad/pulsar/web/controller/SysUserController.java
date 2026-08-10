@@ -2,6 +2,7 @@ package com.kingroad.pulsar.web.controller;
 
 import com.kingroad.pulsar.common.Result;
 import com.kingroad.pulsar.config.RsaConfig;
+import com.kingroad.pulsar.domain.dto.PasswordResetDto;
 import com.kingroad.pulsar.domain.entity.SysRole;
 import com.kingroad.pulsar.domain.entity.SysUser;
 import com.kingroad.pulsar.repository.SysUserRepository;
@@ -92,6 +93,19 @@ public class SysUserController extends BaseCrudController<SysUser, Long, SysUser
                     .collect(Collectors.toList());
         }
         service.assignRole(userId, roles);
+        return Result.success();
+    }
+
+    @PostMapping("/reset-password")
+    public Result<Void> resetPassword(@RequestBody PasswordResetDto dto) {
+        if(ObjectUtils.isEmpty(dto) || ObjectUtils.isEmpty(dto.getUserId()) ||  ObjectUtils.isEmpty(dto.getNewPassword())) {
+            return Result.error("用户ID不存在或新密码为空");
+        }
+
+        String rawPassword = EncryptUtil.decryptWithRsa(dto.getNewPassword(), EncryptUtil.getRsaPrivateKey(RsaConfig.PRIVATE_KEY));
+
+        service.resetPassword(dto.getUserId(), encoder.encode(rawPassword));
+
         return Result.success();
     }
 }

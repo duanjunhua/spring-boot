@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>角色权限申请</title>
+    <!-- Vue2 -->
+    <script th:src="@{/element/vue.js}"></script>
+    <!-- ElementUI CSS+JS -->
+    <link rel="stylesheet" th:href="@{/element/index.css}">
+    <script th:src="@{/element/index.js}"></script>
+    <!-- jQuery 3.7 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+            padding-top: 80px;
+        }
+        .apply-card {
+            width: 600px;
+            margin: 0 auto;
+        }
+        .card-header-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="apply-card">
+        <el-card shadow="hover">
+            <div slot="header" class="card-header-title">
+                <i class="el-icon-warning-outline" style="color:#E6A23C"></i>
+                账号尚未分配权限，请提交权限申请
+            </div>
+            <el-form ref="applyForm" :model="applyForm" label-width="100px">
+                <el-form-item label="第三方账号">
+                    <el-input v-model="applyForm.userId" v-if="false"></el-input>
+                    <el-input v-model="applyForm.ssoId" disabled></el-input>
+                </el-form-item>
+
+                <el-form-item label="申请理由" prop="applyReason">
+                    <el-input
+                            v-model="applyForm.applyReason"
+                            type="textarea"
+                            :rows="5"
+                            placeholder="请描述使用系统的用途，便于管理员审批"
+                            maxlength="500"
+                            show-word-limit
+                    ></el-input>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="primary" @click="submitApply" :loading="submitLoading">提交申请</el-button>
+                    <el-button @click="backLogin">返回登录页</el-button>
+                </el-form-item>
+            </el-form>
+        </el-card>
+    </div>
+</div>
+
+<!-- 重点：Thymeleaf 把后端对象输出为JS全局变量，放在Vue前面！ -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const initUser = /*[[${applyForm}]]*/ {};
+    /*]]>*/
+</script>
+
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                submitLoading: false,
+                applyForm: {
+                    userId: initUser.id || '',
+                    ssoId: initUser.ssoId || '',
+                    applyReason: initUser.applyReason || '',
+                }
+            }
+        },
+        mounted() {
+            console.log(initUser)
+        },
+        methods: {
+            submitApply() {
+                const _this = this;
+                if (!this.applyForm.applyReason || this.applyForm.applyReason.trim() === '') {
+                    _this.$message.warning('请填写申请理由');
+                    return;
+                }
+                this.submitLoading = true;
+                // 提交申请接口
+
+                $.ajax({
+                    url: '/sso/user/apply/submit',
+                    type: 'POST',
+                    contentType: 'application/json;charset=utf-8',
+                    data: JSON.stringify(this.applyForm),
+                    success: res => {
+                        _this.submitLoading = false;
+                        if (res.code === 200) {
+                            _this.$message.success('申请提交成功，请等待管理员审批！');
+                            setTimeout(() => {
+                                window.location.href = '/login';
+                            }, 2000);
+                        } else {
+                            _this.$message.warning(res.message);
+                            setTimeout(() => {
+                                window.location.href = '/login';
+                            }, 2000);
+                        }
+                    }
+                })
+            },
+            backLogin() {
+                window.location.href = '/login';
+            }
+        }
+    })
+</script>
+</body>
+</html>

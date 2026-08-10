@@ -264,3 +264,28 @@ COMMENT ON COLUMN t_tenant.is_default IS '是否默认租户，TRUE-是、FALSE-
 COMMENT ON COLUMN t_tenant.is_active IS '是否启用租户，TRUE-是、FALSE-否';
 COMMENT ON COLUMN t_tenant.create_at IS '创建时间';
 COMMENT ON COLUMN t_tenant.update_at IS '更新时间';
+
+CREATE TABLE t_sso_user_apply (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    sso_id BIGINT NOT NULL,
+    apply_time TIMESTAMP DEFAULT NOW(),
+    apply_reason TEXT DEFAULT NULL,
+    status VARCHAR(255) NOT NULL,
+    approval_opinion VARCHAR(255) DEFAULT NULL,
+    update_by BIGINT DEFAULT NULL,
+    create_at TIMESTAMP DEFAULT NOW(),
+    update_at TIMESTAMP DEFAULT NOW()
+);
+comment on table t_sso_user_apply is '用户开通申请表';
+COMMENT ON COLUMN t_sso_user_apply.id IS '主键';
+COMMENT ON COLUMN t_sso_user_apply.user_id IS '关联用户唯一ID (外键)';
+COMMENT ON COLUMN t_sso_user_apply.sso_id IS '第三方SSO唯一ID';
+COMMENT ON COLUMN t_sso_user_apply.apply_time IS '用户开通申请时间';
+COMMENT ON COLUMN t_sso_user_apply.apply_reason IS '申请理由';
+COMMENT ON COLUMN t_sso_user_apply.status IS '审批状态（APPLYING：审批中、APPROVED：已通过、REJECTED：已驳回）';
+COMMENT ON COLUMN t_sso_user_apply.approval_opinion IS '审批意见';
+COMMENT ON COLUMN t_sso_user_apply.create_at IS '创建时间';
+COMMENT ON COLUMN t_sso_user_apply.changed_by IS '修改⼈⽤⼾ID';
+COMMENT ON COLUMN t_sso_user_apply.update_at IS '更新时间';
+

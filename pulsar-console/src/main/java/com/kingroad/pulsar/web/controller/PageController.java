@@ -3,15 +3,13 @@ package com.kingroad.pulsar.web.controller;
 import com.kingroad.pulsar.authorization.service.InitService;
 import com.kingroad.pulsar.common.Result;
 import com.kingroad.pulsar.domain.dto.SystemInitDto;
+import com.kingroad.pulsar.util.SecurityUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -82,6 +80,23 @@ public class PageController {
     @GetMapping("/user")
     public String user() {
         return "user/user-list";
+    }
+
+    /**
+     * 用户
+     */
+    @GetMapping("/user/apply")
+    public String userRoleApply(Model model) {
+        model.addAttribute("applyForm", SecurityUtil.getLoginUser());
+        return "user/user-apply";
+    }
+
+    /**
+     * 用户
+     */
+    @GetMapping("/user/approval")
+    public String userRoleApproval(Model model) {
+        return "user/user-approval";
     }
 
     /**

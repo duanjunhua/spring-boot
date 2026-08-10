@@ -52,10 +52,11 @@
         </el-table-column>
         <el-table-column label="最近登录" prop="lastLoginTime" width="250"></el-table-column>
         <el-table-column label="创建时间" prop="createAt" width="250"></el-table-column>
-        <el-table-column label="操作" width="300">
+        <el-table-column label="操作" width="400">
             <template slot-scope="scope">
                 <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" v-if="!scope.row.isSuperAdmin">编辑</el-button>
                 <el-button size="small" icon="el-icon-s-tools" @click="openAssignRole(scope.row)" v-if="!scope.row.isSuperAdmin" title="分配角色">授权</el-button>
+                <el-button size="small" icon="el-icon-key" @click="openResetPwdDialog(scope.row)" v-if="scope.row.passwordHash != ''" title="密码重置">重置</el-button>
                 <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" v-if="!scope.row.isSuperAdmin">删除</el-button>
             </template>
         </el-table-column>
@@ -166,6 +167,7 @@
             <el-button type="primary" @click="submitForm">确定</el-button>
         </div>
     </el-dialog>
+
     <!-- 分配角色弹窗 -->
     <el-dialog title="分配角色" :visible.sync="assignDialogVisible" width="520px">
         <el-checkbox-group v-model="checkedRoleIds">
@@ -176,6 +178,22 @@
         <div slot="footer" class="dialog-footer">
             <el-button @click="assignDialogVisible = false">取消</el-button>
             <el-button type="primary" @click="saveAssignRole">保存分配</el-button>
+        </div>
+    </el-dialog>
+
+    <!-- 【新增】重置密码弹窗 -->
+    <el-dialog title="重置密码" :visible.sync="resetPwdDialogVisible" width="420px">
+        <el-form ref="resetPwdFormRef" :model="resetPwdForm" label-width="110px" :rules="resetPwdRules">
+            <el-form-item label="新密码" prop="newPwd">
+                <el-input v-model="resetPwdForm.newPwd" show-password placeholder="请输入新密码"></el-input>
+            </el-form-item>
+            <el-form-item label="确认新密码" prop="confirmNewPwd">
+                <el-input v-model="resetPwdForm.confirmNewPwd" show-password placeholder="再次输入新密码"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="resetPwdDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitResetPwd">确认重置</el-button>
         </div>
     </el-dialog>
 </div>
@@ -222,7 +240,24 @@
                 assignDialogVisible: false,
                 currentUserId: null,
                 allRoleList: [],
-                checkedRoleIds: []
+                checkedRoleIds: [],
+
+                // ========== 重置密码 ==========
+                resetPwdDialogVisible: false,
+                resetTargetUserId: null,
+                resetPwdForm: {
+                    newPwd: '',
+                    confirmNewPwd: ''
+                },
+                resetPwdRules: {
+                    newPwd: [
+                        {required: true, message: '请输入新密码', trigger: 'blur'}
+                    ],
+                    confirmNewPwd: [
+                        {required: true, message: '请再次输入新密码', trigger: 'blur'},
+                        {validator: (rule, value, callback) => this.checkResetPwd(rule, value, callback), trigger: 'blur'}
+                    ]
+                }
             }
         },
         mounted() {
@@ -243,7 +278,13 @@
                 }
                 callback();
             },
-
+            // 重置密码弹窗密码校验
+            checkResetPwd(rule, value, callback) {
+                if (value !== this.resetPwdForm.newPwd) {
+                    return callback(new Error('两次密码输入不一致'));
+                }
+                callback();
+            },
             // 加载用户列表
             loadTableData() {
                 const _this = this;
@@ -373,6 +414,44 @@
             formatCluster(row){
                 const item = this.clusterList.find(c => c.id === row.clusterId);
                 return item ? item.clusterName : row.clusterId;
+            },
+            // ========== 重置密码方法 ==========
+            openResetPwdDialog(row) {
+                this.resetTargetUserId = row.id;
+                this.resetPwdForm.newPwd = '';
+                this.resetPwdForm.confirmNewPwd = '';
+                this.resetPwdDialogVisible = true;
+                this.$nextTick(() => {
+                    this.$refs.resetPwdFormRef.clearValidate();
+                })
+            },
+            submitResetPwd() {
+                const _this = this;
+                this.$refs.resetPwdFormRef.validate(valid => {
+                    if (!valid) return;
+
+                    this.$confirm('确定重置该用户密码？', '警告', {type:'warning'}).then(()=>{
+                        // 密码进行RSA加密传输
+                        const encryptPwd = encryptRsa(_this.resetPwdForm.newPwd);
+                        $.ajax({
+                            url: '/oop-user/reset-password',
+                            type: 'POST',
+                            contentType: 'application/json;charset=utf-8',
+                            data: JSON.stringify({
+                                userId: _this.resetTargetUserId,
+                                newPassword: encryptPwd
+                            }),
+                            success: res => {
+                                if (res.code === 200) {
+                                    _this.$message.success('密码重置成功！');
+                                    _this.resetPwdDialogVisible = false;
+                                } else {
+                                    _this.$message.error(res.msg);
+                                }
+                            }
+                        })
+                    }).catch(()=>{})
+                })
             }
         }
     })

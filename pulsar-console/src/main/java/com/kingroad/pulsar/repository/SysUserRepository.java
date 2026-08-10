@@ -2,6 +2,8 @@ package com.kingroad.pulsar.repository;
 
 import com.kingroad.pulsar.domain.entity.SysUser;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -19,4 +21,7 @@ public interface SysUserRepository extends JpaRepository<SysUser,Long> {
 
     Optional<SysUser> findBySsoId(String ssoId);
 
+    @Modifying
+    @Query(value = "update SysUser set passwordHash = :passwordHash where id = :userId")
+    void updatePasswordHashByUserId(Long userId, String passwordHash);
 }

@@ -9,6 +9,7 @@ import com.kingroad.pulsar.service.SysRoleService;
 import com.kingroad.pulsar.service.SysUserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -74,7 +75,10 @@ public class OAuthOidcUserService extends OidcUserService {
             SysUser u = SysUser.buildSsoUser(ssoId, email, nickname);
             sysUser = service.saveOrUpdate(u);
 
-            // 给予用户普通角色
+            /**
+             * 用户普通角色授予通过用户申请
+             */
+            /*
             SysRole role = roleService.findEntityByRoleCode("ROLE_USER");
             if(ObjectUtils.isNotEmpty(role)){
                 SysUserRole sysUserRole = new SysUserRole();
@@ -83,6 +87,9 @@ public class OAuthOidcUserService extends OidcUserService {
                 urRepository.save(sysUserRole);
             }
             sysUser.setRoleList(Arrays.asList(role));
+            */
+            // 封装自定义OidcUser，可存入用户ID、角色等后续鉴权使用
+            return new SysOidcUser(CollectionUtils.emptyCollection(), oidcUser.getIdToken(), oidcUser.getUserInfo(), SsoConst.ATTR_SUB, sysUser);
         }
 
         log.info("已绑定本地账号，直接登录：{}", sysUser.getUsername());

@@ -1,10 +1,13 @@
 package com.kingroad.pulsar.util;
 
+import com.kingroad.pulsar.authorization.service.LocalUser;
+import com.kingroad.pulsar.authorization.service.LocalUserDetailService;
 import com.kingroad.pulsar.authorization.sso.SysOidcUser;
 import com.kingroad.pulsar.domain.entity.SysUser;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -21,10 +24,16 @@ public class SecurityUtil {
         if (authentication == null) {
             return null;
         }
+        
         Object principal = authentication.getPrincipal();
         if (principal instanceof SysOidcUser oidcUser) {
             return oidcUser.getSysUser();
         }
+
+        if(principal instanceof LocalUser localUser) {
+            return localUser.getSysUser();
+        }
+
         return new SysUser();
     }
 
@@ -35,6 +44,14 @@ public class SecurityUtil {
     public static Long getUserId() {
         SysUser user = getLoginUser();
         return user == null ? null : user.getId();
+    }
+
+    /**
+     * 获取当前登录用户ID
+     */
+    public static String getSsoId() {
+        SysUser user = getLoginUser();
+        return user == null ? null : user.getSsoId();
     }
 
     /**

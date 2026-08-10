@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * @Author: Michael J H Duan[JunHua]
  * @Date: 2026-07-31 周五 17:03
  * @Version: v1.0
- * @Description:
+ * @Description: 集群状态监测
  */
 @Slf4j
 @Component

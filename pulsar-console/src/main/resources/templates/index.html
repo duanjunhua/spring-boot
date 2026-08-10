@@ -8,8 +8,12 @@
 <body style="padding:50px;">
 <el-card>
     <h3>欢迎登录系统</h3>
-    <p>当前登录用户：<span sec:authentication="principal.username"></span></p>
-    <p>登录类型：<span th:text="${user.getClass().simpleName}"></span></p>
+    <p> 登录类型：
+        <span th:if="${user.ssoId}">SSO</span>
+        <span th:if="${user.ssoId == null}">本地登录</span>
+    </p>
+
+    <p>当前登录用户：<span th:text="${user.username}"></span></p>
     <div style="margin-top:20px;">
         <a th:href="@{/logout}">
             <el-button type="danger">退出登录</el-button>

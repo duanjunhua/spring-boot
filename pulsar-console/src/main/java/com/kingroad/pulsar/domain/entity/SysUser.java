@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.domain.entity;
 
+import com.kingroad.pulsar.authorization.sso.SsoConst;
 import com.kingroad.pulsar.common.CommonConst;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -98,7 +99,7 @@ public class SysUser extends BaseAuditEntity{
     public static SysUser buildSsoUser(String authSsoId, String nickname, String email) {
         SysUser u = new SysUser();
         u.setSsoId(authSsoId);
-        u.setUsername("sso_" + authSsoId);
+        u.setUsername(SsoConst.SSO_PREFIX + authSsoId);
         u.setChineseName(nickname);
         u.setEmail(email);
         u.setEnable(true);

@@ -9,6 +9,11 @@ package com.kingroad.pulsar.authorization.sso;
 public class SsoConst {
 
     /**
+     * SSO前缀标识
+     */
+    public static final String SSO_PREFIX = "sso_";
+
+    /**
      * SSO登录唯一标识，如：sso、dingtalk、wechat
      */
     public static final String SSO_ENABLE = "sso.enable";

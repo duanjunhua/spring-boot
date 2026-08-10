@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.authorization;
 
+import com.kingroad.pulsar.authorization.handler.SsoLoginSuccessHandler;
 import com.kingroad.pulsar.authorization.service.LocalUserDetailService;
 import com.kingroad.pulsar.authorization.sso.OAuth2UserService;
 import com.kingroad.pulsar.authorization.sso.OAuthOidcUserService;
@@ -37,6 +38,8 @@ public class SecurityConfig {
     OAuthOidcUserService oidcUserService;   // 通过id_token解析用户信息，与oAuth2UserService二选一即可
     @Resource
     SsoClientRegistrationRepository ssoClientRegistrationRepository;
+    @Resource
+    SsoLoginSuccessHandler ssoLoginSuccessHandler;
 
     /**
      * 密码加密器（必须配置）
@@ -81,6 +84,21 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             )
 
+            // 第三方用户SSO登录
+            .oauth2Login(oauth2 -> oauth2
+                    .loginPage("/login")
+                    .clientRegistrationRepository(ssoClientRegistrationRepository)
+
+                    // jwt模式从id_token获取用户信息
+                    .userInfoEndpoint(u -> u.oidcUserService(oidcUserService))
+
+                    // 配置从/userinfo获取用户信息
+                    //.userInfoEndpoint(u -> u.userService(oAuth2UserService))
+                    //.defaultSuccessUrl("/index", true)
+                    // 指定自定义登录处理器
+                    .successHandler(ssoLoginSuccessHandler)
+            )
+
             .formLogin(form ->
                     // 访问该地址：控制器跳转自定义登录html页面
                     form.loginPage("/login")
@@ -90,19 +108,6 @@ public class SecurityConfig {
                         // 登录失败跳转回登录页，携带错误参数
                         .failureUrl("/login?error=true")
                         .permitAll()
-            )
-
-            // 第三方用户SSO登录
-            .oauth2Login(oauth2 -> oauth2
-                .loginPage("/login")
-                .clientRegistrationRepository(ssoClientRegistrationRepository)
-
-                // jwt模式从id_token获取用户信息
-                .userInfoEndpoint(u -> u.oidcUserService(oidcUserService))
-
-                // 配置从/userinfo获取用户信息
-                //.userInfoEndpoint(u -> u.userService(oAuth2UserService))
-                .defaultSuccessUrl("/index", true)
             )
             .logout(logout -> logout
                 // 自定义登出请求地址，前端访问 /logout 触发登出
@@ -119,4 +124,6 @@ public class SecurityConfig {
             );
         return http.build();
     }
+
+
 }

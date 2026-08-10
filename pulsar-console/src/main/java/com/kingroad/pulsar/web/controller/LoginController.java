@@ -5,6 +5,7 @@ import com.kingroad.pulsar.common.Result;
 import com.kingroad.pulsar.config.RsaConfig;
 import com.kingroad.pulsar.service.GlobalConfigService;
 import com.kingroad.pulsar.util.EncryptUtil;
+import com.kingroad.pulsar.util.SecurityUtil;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.Authentication;
@@ -43,7 +44,7 @@ public class LoginController {
     // 登录成功首页
     @GetMapping("/index")
     public String index(Authentication authentication, Model model) {
-        model.addAttribute("user", authentication.getPrincipal());
+        model.addAttribute("user", SecurityUtil.getLoginUser());
         return "index";
     }
 
