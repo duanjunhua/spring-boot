@@ -1,8 +1,11 @@
 package com.kingroad.pulsar.authorization.service;
 
+import com.kingroad.pulsar.domain.entity.SysResource;
 import com.kingroad.pulsar.domain.entity.SysRole;
 import com.kingroad.pulsar.domain.entity.SysUser;
 import com.kingroad.pulsar.exception.BusinessException;
+import com.kingroad.pulsar.service.SysResourceService;
+import com.kingroad.pulsar.service.SysRoleService;
 import com.kingroad.pulsar.service.SysUserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +37,9 @@ public class LocalUserDetailService implements UserDetailsService {
     @Resource
     SysUserService service;
 
+    @Resource
+    SysResourceService resService;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         SysUser u = service.findEntityByUsername(username);
@@ -40,6 +47,12 @@ public class LocalUserDetailService implements UserDetailsService {
         if(ObjectUtils.isEmpty(u)) throw new UsernameNotFoundException("用户名不存在");
 
         if(StringUtils.isNoneBlank(u.getSsoId())) throw new BusinessException("请通过第三方SSO登录");
+
+        // 超级管理员默认所有权限
+        if(u.getIsSuperAdmin()){
+            List<SysResource> resources = resService.findAll();
+            u.setResList(resources);
+        }
 
         return getUserDetails(u);
     }
@@ -54,6 +67,12 @@ public class LocalUserDetailService implements UserDetailsService {
 
         if(ObjectUtils.isEmpty(u)) throw new UsernameNotFoundException("用户名不存在");
 
+        // 超级管理员默认所有权限
+        if(u.getIsSuperAdmin()){
+            List<SysResource> resources = resService.findAll();
+            u.setResList(resources);
+        }
+
         return getUserDetails(u);
     }
 
@@ -65,7 +84,7 @@ public class LocalUserDetailService implements UserDetailsService {
                 true,
                 true,
                 true,
-                u.getRoleList().stream().map(SysRole::getRoleCode).map(SimpleGrantedAuthority::new).collect(Collectors.toList()),
+                u.getResList().stream().map(SysResource::getResourceCode).map(SimpleGrantedAuthority::new).collect(Collectors.toList()),
                 u
         );
     }

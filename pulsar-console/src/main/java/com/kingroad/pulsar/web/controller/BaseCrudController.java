@@ -3,7 +3,6 @@ package com.kingroad.pulsar.web.controller;
 import com.kingroad.pulsar.aop.Log;
 import com.kingroad.pulsar.common.PageQuery;
 import com.kingroad.pulsar.common.Result;
-import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +34,7 @@ public abstract class BaseCrudController<T, ID, R extends JpaRepository<T, ID>> 
     /**
      * 查询所有
      */
-    @Log(operation = Log.OperationType.PAGE, description = "分页查询")
+    @Log(operation = Log.OperationType.LIST, description = "查询全部")
     @GetMapping("/all")
     public Result<List<T>> all() {
         return Result.success(repository.findAll());

@@ -34,6 +34,7 @@ public @interface Log {
         DELETE,
         QUERY,
         PAGE,
+        LIST,
         UNKNOWN
     }
 }

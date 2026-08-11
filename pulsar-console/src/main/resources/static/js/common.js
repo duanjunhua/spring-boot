@@ -1,4 +1,4 @@
-let rsaPubKey,  encryptTool = new JSEncrypt()
+let permissions = []
 
 /**
  * 分页处理
@@ -27,35 +27,9 @@ const PaginationUtil = {
 }
 
 /**
- * 加载系统全局前端密码RSA加密public key
- */
-function loadPublicKey(){
-    $.get("/rsa/get-pubkey", res => {
-        if(res.success) {
-            rsaPubKey = res.data.replaceAll("\\\\n", "\n");
-            return rsaPubKey
-        } else {
-            console.log("获取加密公钥失败！");
-        }
-    }).fail(()=>{
-        console.log("请求公钥接口异常");
-    })
-}
-
-/**
- * 对明文进行RSA加密
- * @param rawText 待加密明文
- * @param publicKey 公钥
- */
-function encryptRsa (rawText, publicKey) {
-    encryptTool.setPublicKey(publicKey || rsaPubKey);
-    return encryptTool.encrypt(rawText);
-}
-
-/**
  * 加载全部租户信息
  */
-function loadTenant(){
+window.loadTenant = function(){
     return new Promise((resolve) => {
         $.get('/pulsar-tenant/all', res => {
             if (res.code === 200) {
@@ -70,7 +44,7 @@ function loadTenant(){
 /**
  * 加载全部集群
  */
-function loadCluster(lst){
+window.loadCluster = function(){
     return new Promise((resolve) => {
         $.get('/pulsar-clus/all', res => {
             if (res.code === 200) {
@@ -82,5 +56,35 @@ function loadCluster(lst){
     })
 }
 
-// 执行加载全局RSA密钥
-loadPublicKey()
+/**
+ * 加载当前已登陆用户权限集合
+ */
+window.loadCurrentUserPermissions = function(){
+    $.get({
+        url: '/oop-user/logged-in/permissions',
+        async: false,
+        success: (res) => {
+            if(res.success) {
+                permissions = res.data;
+            } else {
+                console.log("获取当前登录用户权限异常");
+            }
+        }
+    }).fail(()=>{
+        console.log("获取当前登录用户权限集合失败");
+    });
+}
+
+/**
+ * 判断是否拥有权限，如：hasPermission('user:add')
+ */
+window.hasPermission = function(perm){
+    if (!perm) return true;
+
+    if(!permissions) return false;
+
+    return permissions.map(p => p.resourceCode).includes(perm);
+}
+
+// 执行当前用户角色
+window.loadCurrentUserPermissions()

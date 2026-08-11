@@ -8,15 +8,13 @@
     <script th:src="@{/element/index.js}"></script>
     <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
     <style>.toolbar {margin-bottom:15px;}</style>
-    <!-- RSA加密工具: 用于密码加密 -->
-    <script th:src="@{/js/encrypt/jsencrypt.min.js}"></script>
-    <!-- Common JS，需要先引入jsencrypt -->
+    <!-- Common JS -->
     <script th:src="@{/js/common.js}"></script>
 </head>
 <body>
 <div id="app">
     <div class="toolbar">
-        <el-button type="primary" icon="el-icon-circle-plus-outline" @click="openAddDialog">新增顶级</el-button>
+        <el-button type="primary" icon="el-icon-circle-plus-outline" @click="openAddDialog" v-if="hasPerm('res:add')">新增顶级</el-button>
     </div>
     <!-- 树形表格 -->
     <el-table
@@ -29,7 +27,7 @@
     >
         <el-table-column label="资源名称" prop="resourceName"></el-table-column>
         <el-table-column label="ID" prop="id" width="80" v-if="false"></el-table-column>
-        <el-table-column label="父级ID" prop="parentId" width="100"></el-table-column>
+        <el-table-column label="父级ID" prop="parentId" width="100"v-if="false"></el-table-column>
         <el-table-column label="权限编码" prop="resourceCode"></el-table-column>
         <el-table-column label="资源类型">
             <template slot-scope="scope">
@@ -49,9 +47,9 @@
         </el-table-column>
         <el-table-column label="操作" width="300">
             <template slot-scope="scope">
-                <el-button size="small" icon="el-icon-circle-plus-outline" @click="openAddChild(scope.row)" title="新增">新增</el-button>
-                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" title="编辑">编辑</el-button>
-                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" title="删除">删除</el-button>
+                <el-button size="small" icon="el-icon-circle-plus-outline" @click="openAddChild(scope.row)" title="新增" v-if="hasPerm('res:add')">新增</el-button>
+                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" title="编辑" v-if="hasPerm('res:edit')">编辑</el-button>
+                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" title="删除" v-if="hasPerm('res:del')">删除</el-button>
             </template>
         </el-table-column>
     </el-table>
@@ -161,6 +159,10 @@
             this.loadParentSelectTree();
         },
         methods:{
+
+            hasPerm(permission){
+                return hasPermission(permission);
+            },
             // 树过滤方法
             filterNode(value, data) {
                 if (!value) return true;
@@ -281,7 +283,7 @@
                                 _this.dialogVisible=false;
                                 _this.loadTreeData();
                                 _this.loadParentSelectTree();
-                            }else _this.$message.error(res.msg);
+                            }else _this.$message.error(res.message);
                         }
                     })
                 })

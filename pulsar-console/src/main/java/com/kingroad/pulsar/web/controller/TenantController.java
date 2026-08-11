@@ -1,11 +1,14 @@
 package com.kingroad.pulsar.web.controller;
 
+import com.kingroad.pulsar.common.PageQuery;
 import com.kingroad.pulsar.common.Result;
 import com.kingroad.pulsar.domain.entity.Tenant;
 import com.kingroad.pulsar.repository.TenantRepository;
 import com.kingroad.pulsar.service.TenantService;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +23,7 @@ import java.util.Optional;
  * @Version: v1.0
  * @Description:
  */
+@PreAuthorize("permissionCheck.hasPerm('tenant')")
 @RestController
 @RequestMapping("/pulsar-tenant")
 public class TenantController extends BaseCrudController<Tenant, Long, TenantRepository>{
@@ -30,6 +34,48 @@ public class TenantController extends BaseCrudController<Tenant, Long, TenantRep
 
     @Resource
     TenantService service;
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('tenant:all')")
+    public Result<List<Tenant>> all() {
+        return super.all();
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('tenant:page')")
+    public Result<Page<Tenant>> page(PageQuery pageQuery) {
+        return super.page(pageQuery);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('tenant:get')")
+    public Result<Tenant> getById(Long id) {
+        return super.getById(id);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('tenant:add')")
+    public Result<Tenant> save(Tenant entity) {
+        return super.save(entity);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('tenant:edit')")
+    public Result<Tenant> update(Long id, Tenant entity) {
+        return super.update(id, entity);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('tenant:del')")
+    public Result<Void> delete(Long id) {
+        return super.delete(id);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('tenant:batch-del')")
+    public Result<Void> batchDelete(Iterable<Long> idList) {
+        return super.batchDelete(idList);
+    }
 
     /**
      * 修改

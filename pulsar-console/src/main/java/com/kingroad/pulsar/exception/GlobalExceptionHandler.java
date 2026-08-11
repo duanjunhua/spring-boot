@@ -2,11 +2,16 @@ package com.kingroad.pulsar.exception;
 
 import com.kingroad.pulsar.common.Result;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.io.IOException;
 
 /**
  * 全局异常处理器
@@ -14,6 +19,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public void handleBusinessException(AccessDeniedException e, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.warn("没有资源权限: {} - {}", request.getRequestURI(), e.getMessage());
+        response.sendRedirect("/unauthorized");
+    }
 
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e, HttpServletRequest request) {

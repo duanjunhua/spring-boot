@@ -6,6 +6,7 @@ import com.kingroad.pulsar.domain.dto.SystemInitDto;
 import com.kingroad.pulsar.util.SecurityUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,11 @@ public class PageController {
 
     @Resource
     InitService initService;
+
+    @GetMapping("/unauthorized")
+    public String unauthorized(){
+        return "unauthorized";
+    }
 
     /**
      * 初始化引导界面
@@ -61,6 +67,7 @@ public class PageController {
     /**
      * 集群
      */
+    @PreAuthorize("@permissionCheck.hasPerm('cluster')")
     @GetMapping("/cluster")
     public String cluster() {
         return "cluster/cluster-list";
@@ -69,6 +76,7 @@ public class PageController {
     /**
      * 租户
      */
+    @PreAuthorize("@permissionCheck.hasPerm('tenant')")
     @GetMapping("/tenant")
     public String tenant() {
         return "tenant/tenant-list";
@@ -77,6 +85,7 @@ public class PageController {
     /**
      * 用户
      */
+    @PreAuthorize("@permissionCheck.hasPerm('user')")
     @GetMapping("/user")
     public String user() {
         return "user/user-list";
@@ -102,6 +111,7 @@ public class PageController {
     /**
      * 角色
      */
+    @PreAuthorize("@permissionCheck.hasPerm('role')")
     @GetMapping("/role")
     public String role() {
         return "role/role-list";
@@ -110,6 +120,7 @@ public class PageController {
     /**
      * 资源
      */
+    @PreAuthorize("@permissionCheck.hasPerm('res')")
     @GetMapping("/res")
     public String res() {
         return "res/res-list";

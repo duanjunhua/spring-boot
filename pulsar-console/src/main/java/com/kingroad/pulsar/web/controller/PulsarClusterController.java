@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.web.controller;
 
+import com.kingroad.pulsar.common.PageQuery;
 import com.kingroad.pulsar.common.Result;
 import com.kingroad.pulsar.domain.entity.PulsarCluster;
 import com.kingroad.pulsar.repository.PulsarClusterRepository;
@@ -8,6 +9,8 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,7 +33,44 @@ public class PulsarClusterController extends BaseCrudController<PulsarCluster, L
     @Resource
     PulsarClusterService service;
 
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:all')")
+    public Result<List<PulsarCluster>> all() {
+        return super.all();
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:page')")
+    public Result<Page<PulsarCluster>> page(PageQuery pageQuery) {
+        return super.page(pageQuery);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:get')")
+    public Result<PulsarCluster> getById(Long id) {
+        return super.getById(id);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:edit')")
+    public Result<PulsarCluster> update(Long id, PulsarCluster entity) {
+        return super.update(id, entity);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:del')")
+    public Result<Void> delete(Long id) {
+        return super.delete(id);
+    }
+
+    @Override
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:batch-del')")
+    public Result<Void> batchDelete(Iterable<Long> idList) {
+        return super.batchDelete(idList);
+    }
+
     @PostMapping("/save-cluster")
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:add')")
     public Result<PulsarCluster> saveCluster(@Valid @RequestBody PulsarCluster entity) {
         if(ObjectUtils.isEmpty(entity.getId())) {
             return Result.success(service.saveOrUpdate(entity));
@@ -51,6 +91,7 @@ public class PulsarClusterController extends BaseCrudController<PulsarCluster, L
     /**
      * 修改
      */
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:default')")
     @PostMapping("/set-default/{id}")
     public Result<PulsarCluster> setDefault(@PathVariable Long id) {
         Optional<PulsarCluster> optional = repository.findById(id);
@@ -75,6 +116,7 @@ public class PulsarClusterController extends BaseCrudController<PulsarCluster, L
      * 修改
      */
     @PostMapping("/change-status")
+    @PreAuthorize("@permissionCheck.hasPerm('cluster:status')")
     public Result<PulsarCluster> changeStatus(Long id, String status) {
         Optional<PulsarCluster> optional = repository.findById(id);
         if (!optional.isPresent()) {
