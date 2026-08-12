@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
@@ -60,6 +61,7 @@ public class AuditLog {
      * 创建时间
      */
     @CreatedDate
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createAt;
 
 }

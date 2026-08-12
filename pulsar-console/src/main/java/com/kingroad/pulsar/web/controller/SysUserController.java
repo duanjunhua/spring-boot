@@ -143,7 +143,7 @@ public class SysUserController extends BaseCrudController<SysUser, Long, SysUser
         return Result.success();
     }
 
-    @PreAuthorize("@permissionCheck.hasPerm('resetPwd')")
+    @PreAuthorize("@permissionCheck.hasPerm('user:resetPwd')")
     @PostMapping("/reset-password")
     public Result<Void> resetPassword(@RequestBody PasswordResetDto dto) {
         if(ObjectUtils.isEmpty(dto) || ObjectUtils.isEmpty(dto.getUserId()) ||  ObjectUtils.isEmpty(dto.getNewPassword())) {
@@ -161,6 +161,7 @@ public class SysUserController extends BaseCrudController<SysUser, Long, SysUser
      * 获取当前登录用户权限集合
      */
     @GetMapping("/logged-in/permissions")
+    @ResponseBody
     public Result<List<SysResource>> findLoginUserPermissions(){
         SysUser loginUser = SecurityUtil.getLoginUser();
         if(ObjectUtils.isEmpty(loginUser) || CollectionUtils.isEmpty(loginUser.getResList())) {

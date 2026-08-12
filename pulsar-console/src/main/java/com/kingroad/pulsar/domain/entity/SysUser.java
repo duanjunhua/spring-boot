@@ -1,5 +1,6 @@
 package com.kingroad.pulsar.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.kingroad.pulsar.authorization.sso.SsoConst;
 import com.kingroad.pulsar.common.CommonConst;
 import jakarta.persistence.*;
@@ -76,6 +77,7 @@ public class SysUser extends BaseAuditEntity{
     /**
      * 最近登录时间
      */
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "last_login_time")
     private LocalDateTime lastLogin;
 

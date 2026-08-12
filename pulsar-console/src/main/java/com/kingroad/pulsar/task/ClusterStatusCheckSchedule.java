@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class PulsarClusterStatusCheck {
+public class ClusterStatusCheckSchedule {
 
     @Value("${spring.pulsar.admin.authentication.param.token}")
     private String pulsarAdminUserToken;

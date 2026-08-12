@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>资源权限管理</title>
+    <link rel="stylesheet" th:href="@{/css/scroll.css}">
     <script th:src="@{/element/vue.js}"></script>
     <link rel="stylesheet" th:href="@{/element/index.css}">
     <script th:src="@{/element/index.js}"></script>
@@ -14,7 +15,9 @@
 <body>
 <div id="app">
     <div class="toolbar">
-        <el-button type="primary" icon="el-icon-circle-plus-outline" @click="openAddDialog" v-if="hasPerm('res:add')">新增顶级</el-button>
+        <el-tooltip content="新增顶级" placement="top" effect="dark">
+            <el-button size="small" type="primary" icon="el-icon-plus" @click="openAddDialog" v-if="hasPerm('res:add')">新增</el-button>
+        </el-tooltip>
     </div>
     <!-- 树形表格 -->
     <el-table
@@ -47,9 +50,9 @@
         </el-table-column>
         <el-table-column label="操作" width="300">
             <template slot-scope="scope">
-                <el-button size="small" icon="el-icon-circle-plus-outline" @click="openAddChild(scope.row)" title="新增" v-if="hasPerm('res:add')">新增</el-button>
-                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" title="编辑" v-if="hasPerm('res:edit')">编辑</el-button>
-                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" title="删除" v-if="hasPerm('res:del')">删除</el-button>
+                <el-button size="small" icon="el-icon-circle-plus-outline" @click="openAddChild(scope.row)" v-if="hasPerm('res:add')">新增</el-button>
+                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)" v-if="hasPerm('res:edit')">编辑</el-button>
+                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)" v-if="hasPerm('res:del')">删除</el-button>
             </template>
         </el-table-column>
     </el-table>
@@ -110,16 +113,19 @@
                 style="margin-bottom:10px;"
                 clearable
         ></el-input>
-        <el-tree
-                ref="treeSelect"
-                :data="parentTreeList"
-                node-key="id"
-                default-expand-all
-                :props="{children:'children',label:'resourceName'}"
-                highlight-current
-                :filter-node-method="filterNode"
-        >
-        </el-tree>
+        <!--  default-expand-level: 只自动展开第几级 -->
+        <div class="tree-scroll-wrap" style="max-height: 20rem; overflow-y: auto;">
+            <el-tree
+                    ref="treeSelect"
+                    :data="parentTreeList"
+                    node-key="id"
+                    default-expand-level="1"
+                    :props="{children:'children',label:'resourceName'}"
+                    highlight-current
+                    :filter-node-method="filterNode"
+            >
+            </el-tree>
+        </div>
         <div slot="footer">
             <el-button @click="treeSelectVisible = false">取消</el-button>
             <el-button type="primary" @click="confirmSelectParent">确定</el-button>

@@ -2,6 +2,8 @@ server:
   port: 8080
   servlet:
     context-path: /
+  tomcat:
+    persistent-sessions: false
 
 spring:
   application:
@@ -9,6 +11,9 @@ spring:
   web:
     resources:
       static-locations: classpath:/static/,classpath:/js/,classpath:/element/,classpath:/css/
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: UTC
 
   datasource:
     url: jdbc:postgresql://localhost:5432/pulsar_console

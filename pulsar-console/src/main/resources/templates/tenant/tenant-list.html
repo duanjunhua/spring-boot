@@ -10,6 +10,7 @@
     <script th:src="@{/element/index.js}"></script>
     <!-- jQuery 3.7 -->
     <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <script th:src="@{/js/common.js}"></script>
     <style>
         .toolbar {margin: 15px 0;}
     </style>
@@ -17,7 +18,7 @@
 <body>
 <div id="app">
     <div class="toolbar">
-        <el-button type="primary" icon="el-icon-plus" @click="openAdd">新增租户</el-button>
+        <el-button type="primary" size="small" icon="el-icon-plus" @click="openAdd">新增</el-button>
     </div>
 
     <!-- 租户表格 -->
@@ -43,9 +44,9 @@
         <el-table-column label="创建时间" prop="createAt" width="180"></el-table-column>
         <el-table-column label="操作" width="320">
             <template slot-scope="scope">
-                <el-button size="mini" @click="openEdit(scope.row)">编辑</el-button>
-                <el-button size="mini" type="success" @click="setDefaultTenant(scope.row)" v-if="!scope.row.isDefault">设为默认</el-button>
-                <el-button size="mini" type="danger" @click="delTenant(scope.row)">删除</el-button>
+                <el-button size="small" icon="el-icon-edit-outline" @click="openEdit(scope.row)" v-if="!scope.row.isDefault">编辑</el-button>
+<!--                <el-button size="small" type="success" @click="setDefaultTenant(scope.row)" v-if="!scope.row.isDefault">设为默认</el-button>-->
+                <el-button size="small" icon="el-icon-delete" type="danger" @click="delTenant(scope.row)" v-if="!scope.row.isDefault">删除</el-button>
             </template>
         </el-table-column>
     </el-table>

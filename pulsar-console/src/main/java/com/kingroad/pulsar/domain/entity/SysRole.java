@@ -36,4 +36,9 @@ public class SysRole extends BaseAuditEntity{
      */
     private String description;
 
+    /**
+     * 是否系统角色，系统角色不允许删除
+     */
+    private Boolean isSystemRole = Boolean.FALSE;
+
 }

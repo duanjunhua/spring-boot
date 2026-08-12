@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "t_event_version")
 @EntityListeners(AuditingEntityListener.class)
-public class EventVersion{
+public class EventVersion extends BaseAuditEntity{
 
     /**
      * 主键
@@ -49,20 +49,8 @@ public class EventVersion{
     private String changeLog;
 
     /**
-     * 创建时间
-     */
-    @CreatedDate
-    private LocalDateTime createAt;
-
-    /**
      * 修改⼈⽤⼾ID
      */
     @LastModifiedBy
     private Long updateBy;
-
-    /**
-     * 更新时间
-     */
-    @LastModifiedDate
-    private LocalDateTime updateAt;
 }

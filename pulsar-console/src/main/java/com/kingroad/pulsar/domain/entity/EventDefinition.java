@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "t_event_definition")
-public class EventDefinition {
+public class EventDefinition extends BaseAuditEntity {
 
     /**
      * 主键
@@ -72,17 +72,5 @@ public class EventDefinition {
      * 创建者⽤⼾ID (外键)
      */
     private Long creatorUserId;
-
-    /**
-     * 创建时间
-     */
-    @CreatedDate
-    private LocalDateTime createAt;
-
-    /**
-     * 更新时间
-     */
-    @LastModifiedDate
-    private LocalDateTime updateAt;
 
 }

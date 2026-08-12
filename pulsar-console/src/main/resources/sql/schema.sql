@@ -115,6 +115,7 @@ CREATE TABLE t_role (
     role_name VARCHAR(100) NOT NULL,
     role_code VARCHAR(100) NOT NULL,
     description TEXT DEFAULT NULL,
+    is_system_role BOOLEAN NOT NULL DEFAULT FALSE,
     create_at TIMESTAMP DEFAULT NOW(),
     update_at TIMESTAMP DEFAULT NOW()
 );
@@ -123,6 +124,7 @@ COMMENT ON COLUMN t_role.id IS '主键';
 COMMENT ON COLUMN t_role.role_name IS '⻆⾊名称（如“系统管理员”、“运维⼈员”、“只读访客”）';
 COMMENT ON COLUMN t_role.role_code IS '⻆⾊唯⼀标识码（如 admin , operator ），⽤于程序逻辑判断';
 COMMENT ON COLUMN t_role.description IS '⻆⾊描述信息';
+COMMENT ON COLUMN t_role.is_system_role IS '是否系统角色';
 COMMENT ON COLUMN t_role.create_at IS '创建时间';
 COMMENT ON COLUMN t_role.update_at IS '更新时间';
 

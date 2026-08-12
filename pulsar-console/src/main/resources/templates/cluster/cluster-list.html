@@ -10,6 +10,7 @@
     <script th:src="@{/element/index.js}"></script>
     <!-- jQuery 3.7 -->
     <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <script th:src="@{/js/common.js}"></script>
     <style>
         .toolbar {margin-bottom: 15px;}
     </style>
@@ -17,7 +18,7 @@
 <body>
 <div id="app">
     <div class="toolbar">
-        <el-button type="primary" icon="el-icon-plus" @click="openAddDialog">新增集群</el-button>
+        <el-button size="small" icon="el-icon-plus" type="primary" @click="openAddDialog">新增</el-button>
     </div>
 
     <!-- 数据表格 -->
@@ -46,9 +47,9 @@
         <el-table-column label="创建时间" prop="createTime" width="180"></el-table-column>
         <el-table-column label="操作" width="280">
             <template slot-scope="scope">
-                <el-button size="mini" @click="openEditDialog(scope.row)">编辑</el-button>
-                <el-button size="mini" type="success" @click="handleSetDefault(scope.row)" v-if="!scope.row.isDefault">设为默认</el-button>
-                <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                <el-button size="small" icon="el-icon-edit-outline" @click="openEditDialog(scope.row)">编辑</el-button>
+                <el-button size="small" icon="el-icon-s-tools" type="success" @click="handleSetDefault(scope.row)" v-if="!scope.row.isDefault" title="设为默认">默认</el-button>
+                <el-button size="small" icon="el-icon-delete" type="danger" @click="handleDelete(scope.row)">删除</el-button>
             </template>
         </el-table-column>
     </el-table>
