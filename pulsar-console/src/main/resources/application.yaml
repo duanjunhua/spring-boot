@@ -16,7 +16,7 @@ spring:
     time-zone: UTC
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/pulsar_console
+    url: jdbc:postgresql://localhost:5432/pulsar
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver

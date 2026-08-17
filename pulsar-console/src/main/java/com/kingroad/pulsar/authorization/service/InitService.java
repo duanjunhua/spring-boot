@@ -58,9 +58,9 @@ public class InitService {
         /**
          * 前端传输密码解码并进行SHA加密存储
          */
-        String originiPwd = EncryptUtil.decryptWithRsa(dto.getPasswordHash(), EncryptUtil.getRsaPrivateKey(RsaConfig.PRIVATE_KEY));
+        String originPwd = EncryptUtil.decryptWithRsa(dto.getPasswordHash(), EncryptUtil.getRsaPrivateKey(RsaConfig.PRIVATE_KEY));
 
-        dto.setPasswordHash(passwordEncoder.encode(originiPwd));
+        dto.setPasswordHash(passwordEncoder.encode(originPwd));
 
         // 2.创建超级管理员
         SysUser adminUser =  SysUserConvert.INSTANCE.requestToEntity(dto);

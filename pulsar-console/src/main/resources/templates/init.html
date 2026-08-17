@@ -242,12 +242,12 @@
                         jwtSetUri: this.formStep2.jwtSetUri
                     };
                     $.post("/init/save", postData, function(res){
-                        console.log(postData)
+                        console.log(res)
                         if(res.code === 200) {
                             vm.$message.success("初始化完成，跳转登录页");
                             setTimeout(()=>location.href="/login",1200);
                         }else{
-                            vm.$message.error(res.msg);
+                            vm.$message.error(res.message);
                         }
                     }).fail(()=> vm.$message.error("网络异常"));
                 })

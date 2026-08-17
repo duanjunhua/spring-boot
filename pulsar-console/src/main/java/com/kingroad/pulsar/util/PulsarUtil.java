@@ -4,7 +4,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.kingroad.pulsar.domain.entity.PulsarCluster;
-import com.kingroad.pulsar.domain.vo.BrokerMetric;
+import com.kingroad.pulsar.domain.vo.broker.BrokerMetric;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;

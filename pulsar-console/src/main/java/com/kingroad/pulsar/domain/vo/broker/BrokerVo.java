@@ -1,4 +1,4 @@
-package com.kingroad.pulsar.domain.vo;
+package com.kingroad.pulsar.domain.vo.broker;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.pulsar.common.policies.data.NamespaceOwnershipStatus;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,7 +18,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BrokerResourceVo {
+public class BrokerVo {
 
     /**
      * 节点地址

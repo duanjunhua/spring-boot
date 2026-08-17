@@ -1,4 +1,4 @@
-package com.kingroad.pulsar.domain.vo;
+package com.kingroad.pulsar.domain.vo.broker;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

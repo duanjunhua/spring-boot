@@ -56,7 +56,7 @@ COMMENT ON COLUMN t_pulsar_cluster.update_at IS '更新时间';
 
 CREATE TABLE t_user (
     id BIGSERIAL PRIMARY KEY,
-    user_id VARCHAR(64) NOT NULL UNIQUE,
+    user_id VARCHAR(64) DEFAULT NULL,
     username VARCHAR(128) NOT NULL,
     chinese_name VARCHAR(256) DEFAULT NULL,
     tenant_name VARCHAR(32) NOT NULL,
@@ -275,7 +275,7 @@ CREATE TABLE t_sso_user_apply (
     apply_reason TEXT DEFAULT NULL,
     status VARCHAR(255) NOT NULL,
     approval_opinion VARCHAR(255) DEFAULT NULL,
-    update_by BIGINT DEFAULT NULL,
+    changed_by BIGINT DEFAULT NULL,
     create_at TIMESTAMP DEFAULT NOW(),
     update_at TIMESTAMP DEFAULT NOW()
 );

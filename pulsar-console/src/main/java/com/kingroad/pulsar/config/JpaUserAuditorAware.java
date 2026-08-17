@@ -2,6 +2,7 @@ package com.kingroad.pulsar.config;
 
 import com.kingroad.pulsar.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,6 @@ public class JpaUserAuditorAware implements AuditorAware<Long> {
     @Override
     public Optional<Long> getCurrentAuditor() {
         // 从上下文或认证对象中获取用户信息
-        return Optional.of(SecurityUtil.getUserId());
+        return Optional.of(ObjectUtils.isEmpty(SecurityUtil.getUserId()) ? 0l : SecurityUtil.getUserId());
     }
 }

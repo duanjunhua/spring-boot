@@ -6,6 +6,7 @@ import com.kingroad.pulsar.domain.dto.SystemInitDto;
 import com.kingroad.pulsar.util.SecurityUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @Version: v1.0
  * @Description: 页面跳转
  */
+@Slf4j
 @Controller
 public class PageController {
 
@@ -58,6 +60,7 @@ public class PageController {
             redirectAttributes.addFlashAttribute("success","初始化完成，请登录超级管理员账号！");
             return Result.success();
         }catch (Exception e){
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("error",e.getMessage());
             redirectAttributes.addFlashAttribute("formData",dto);
             return Result.error(e.getMessage());

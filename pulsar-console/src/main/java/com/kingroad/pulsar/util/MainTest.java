@@ -8,6 +8,9 @@ import cn.hutool.http.Method;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kingroad.pulsar.domain.vo.prometheus.PrometheusItem;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeperAdmin;
@@ -40,6 +43,7 @@ public class MainTest {
     // Pulsar 生产消费Token
     public static final String CON_PRO_TOKEN = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJURVNUNjY2X2RmODJmYWQyIiwiaWF0IjoxNzg1NzIzMDg4LCJleHAiOjE3ODYzMjc4ODh9.iqRXaSFp-IfiwfxOGLi-s3Xb9cTCa7lh5u6GcM-yEAE24ya2I0BENrRfJR7qSkIuD5iTQO3peZhshbg-xLWnEe381pZ1KqDpsjJI8sDH_tO2FuK9LFEork6d5rA-DITsAJC47G4zLUHsjtIvj0KAQxvNuJHSAjuOManLszUc6lkxYTX6HvztiZOlzFoHgqCqFhyf18C6eVHMBdR1JevSlw4g_gAwVjDqK9U1Hcd4Uqfk09LOz4W_ij5ATO6qpIVtpDActJGqdNLTIyVDPyg8EbqF--voxUf1NtnwtZJNf_A4tPcaEQi618mS-EYfLiSQlpMsnb9c4dihaTuc3tNShg";
 
+    public static final ObjectMapper mapper = new ObjectMapper();
 
     // ZK集群地址
     public static final String ZK_CONNECT_STR = "36.200.40.90:2181";
@@ -70,10 +74,10 @@ public class MainTest {
         clusterOperation(admin, defaultCluster, true);
 
         // 租户管理
-        tenantOperation(admin, defaultCluster, defaultTenant, true);
+//        tenantOperation(admin, defaultCluster, defaultTenant, true);
 
         // 命名空间管理
-        namespaceOperation(admin, defaultCluster, defaultTenant, defaultNamespace, false);
+//        namespaceOperation(admin, defaultCluster, defaultTenant, defaultNamespace, false);
 
 
         System.exit(0);
@@ -136,12 +140,60 @@ public class MainTest {
         ClusterData newClusterData = clusterManagement.getCluster(defaultCluster);
         log.info("新集群【{}】创建成功，集群信息：{} \n", defaultCluster, JSONUtil.toJsonStr(newClusterData));
 
+        log.info("----------- 4. 查看集群版本信息 -----------");
+        Brokers brokers = admin.brokers();
+        if(ObjectUtils.isEmpty(brokers)) {
+            return;
+        }
+        String version = brokers.getVersion();
+        log.info("集群版本:{}",  version);
+
+        brokers.getActiveBrokers().forEach(broker -> {
+            try {
+                Map<String, String> runtimeConfigurations = brokers.getRuntimeConfigurations();
+                log.info("Broker【{}】运行配置: {}", broker, JSONUtil.toJsonStr(runtimeConfigurations));
+            } catch (PulsarAdminException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        // 3. 获取业务运行统计指标：消息、连接、Topic业务统计
+        BrokerStats stats = admin.brokerStats();
+
+        String metrics = stats.getMetrics();
+
+        List<PrometheusItem> items = mapper.readValue(metrics, new TypeReference<List<PrometheusItem>>() {});
+
+        // 获取连接指标 brk_active_connections
+        Optional<PrometheusItem> connMetricOpt = items.stream()
+                .filter(item -> {
+                    Map<String, String> dim = item.getDimensions();
+                    return "broker_connection".equals(dim.get("metric"))
+                            && "36.200.40.93".equals(dim.get("broker"));
+                })
+                .findFirst();
+
+        connMetricOpt.ifPresent(item -> {
+            Object activeConn = item.getMetrics().get("brk_active_connections");
+            System.out.println("活跃连接 brk_active_connections = " + activeConn);
+        });
+
+        // 获取loadBalancing下CPU使用率 brk_lb_cpu_usage
+        items.stream()
+                .filter(item -> "loadBalancing".equals(item.getDimensions().get("metric")))
+                .findFirst()
+                .ifPresent(item -> {
+                    Object cpuUsage = item.getMetrics().get("brk_lb_cpu_usage");
+                    System.out.println("CPU使用率 brk_lb_cpu_usage = " + cpuUsage);
+                });
+
+
         // 测试不删除测试集群
         if(isTest) {
             return;
         }
+        log.info("----------- 99. 删除集群 -----------");
 
-        log.info("----------- 4. 删除集群 -----------");
         // 删除集群
         clusterManagement.deleteCluster(defaultCluster);
         clusters = clusterManagement.getClusters();

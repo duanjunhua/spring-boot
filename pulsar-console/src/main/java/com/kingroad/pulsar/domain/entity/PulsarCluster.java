@@ -1,7 +1,12 @@
 package com.kingroad.pulsar.domain.entity;
 
+import com.kingroad.pulsar.domain.vo.bookkeeper.BkNodeVo;
+import com.kingroad.pulsar.domain.vo.broker.BrokerVo;
+import com.kingroad.pulsar.domain.vo.zookeeper.ZkNodeVo;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @Author: Michael J H Duan[JunHua]
@@ -61,6 +66,27 @@ public class PulsarCluster extends BaseAuditEntity{
      * 集群描述
      */
     private String description;
+
+    /**
+     * 集群版本
+     */
+    @Transient
+    private String clusterVersion;
+
+    /**
+     * Broker节点
+     */
+    @Transient
+    private List<BrokerVo> brokers;
+    /**
+     * BookKeeper节点
+     */
+    private List<BkNodeVo> bkNodes;
+
+    /**
+     * ZooKeeper节点
+     */
+    private List<ZkNodeVo> zkNodes;
 
     /**
      * 集群状态

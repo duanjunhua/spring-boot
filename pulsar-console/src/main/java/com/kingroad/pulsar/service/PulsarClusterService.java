@@ -2,7 +2,7 @@ package com.kingroad.pulsar.service;
 
 import com.kingroad.pulsar.common.PageResult;
 import com.kingroad.pulsar.domain.entity.PulsarCluster;
-import com.kingroad.pulsar.domain.vo.BrokerResourceVo;
+import com.kingroad.pulsar.domain.vo.broker.BrokerVo;
 import com.kingroad.pulsar.exception.BusinessException;
 import com.kingroad.pulsar.repository.PulsarClusterRepository;
 import com.kingroad.pulsar.util.PulsarUtil;
@@ -14,18 +14,13 @@ import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.common.policies.data.NamespaceOwnershipStatus;
 import org.apache.pulsar.policies.data.loadbalancer.LoadManagerReport;
-import org.apache.pulsar.policies.data.loadbalancer.LoadReport;
-import org.apache.pulsar.policies.data.loadbalancer.ResourceUsage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Author: Michael J H Duan[JunHua]
@@ -61,8 +56,13 @@ public class PulsarClusterService {
     /**
      * 根据ID获取对象
      */
-    public PulsarCluster findEntityById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new BusinessException("查询内容不存在"));
+    public PulsarCluster findEntityById(Long id) throws PulsarAdminException {
+        Optional<PulsarCluster> optional = repository.findById(id);
+        if(optional.isEmpty()) return new PulsarCluster();
+
+        PulsarCluster cluster = optional.get();
+        cluster.setBrokers(getClusterNodeResourceOverview(cluster.getId()));
+        return cluster;
     }
 
     /**
@@ -80,7 +80,7 @@ public class PulsarClusterService {
         return repository.saveAllAndFlush(entities);
     }
 
-    public List<BrokerResourceVo> getClusterNodeResourceOverview(Long clusterId) throws PulsarAdminException {
+    public List<BrokerVo> getClusterNodeResourceOverview(Long clusterId) throws PulsarAdminException {
         PulsarCluster cluster = repository.findById(clusterId).orElse(null);
 
         if(ObjectUtils.isEmpty(cluster)) return Collections.emptyList();
@@ -97,10 +97,10 @@ public class PulsarClusterService {
         }
 
         // 遍历每个节点，组装资源数据
-        List<BrokerResourceVo> result = new ArrayList<>();
+        List<BrokerVo> result = new ArrayList<>();
         for (String brokerAddr : activeBrokers) {
 
-            BrokerResourceVo.BrokerResourceVoBuilder builder = BrokerResourceVo.builder();
+            BrokerVo.BrokerVoBuilder builder = BrokerVo.builder();
             builder.brokerAddr(brokerAddr);
 
             // 获取CPU、内存、网络带宽负载

@@ -1,4 +1,4 @@
-package com.kingroad.pulsar.domain.vo;
+package com.kingroad.pulsar.domain.vo.broker;
 
 import lombok.Builder;
 import lombok.Data;
