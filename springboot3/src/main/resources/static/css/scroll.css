@@ -1,0 +1,17 @@
+.tree-scroll-wrap::-webkit-scrollbar {
+    width: 6px;  /* 滚动条宽度 */
+}
+/* 滚动条轨道 */
+.tree-scroll-wrap::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+/* 滚动滑块 */
+.tree-scroll-wrap::-webkit-scrollbar-thumb {
+    background: #c0c4cc;
+    border-radius: 3px;
+}
+/* hover滑块加深 */
+.tree-scroll-wrap::-webkit-scrollbar-thumb:hover {
+    background: #909399;
+}

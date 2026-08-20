@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableJpaAuditing(auditorAwareRef = "jpaUserAuditor")  // 开启JPA审计，使得@CreateDate、@UpdateTimestamp生效，若要@CreateBy、@LastModifiedBy生效需实现AuditorAware并指定auditorAwareRef
 @EnableScheduling   // 开启定时任务
 @SpringBootApplication
-@Modulith(additionalPackages = {"com.duanjh.dynamic", "com.duanjh.jpa"})
+@Modulith(additionalPackages = {"com.duanjh.dynamic", "com.duanjh.jpa", "com.duanjh.warmflow"})
 @MapperScan(basePackages = {"com.duanjh.mybatisplus.mapper", "com.duanjh.shiro"})    // 使用MybatisPlus需要标注Mapper接口位置
 public class Springboot3Application extends SpringBootServletInitializer {  // Thymeleaf需要继承SpringBootServletInitializer添加 Servlet 的支持
 

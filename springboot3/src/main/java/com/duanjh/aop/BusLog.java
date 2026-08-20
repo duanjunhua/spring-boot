@@ -18,6 +18,6 @@ public @interface BusLog {
     /**
      * 日志描述信息
      */
-    String descption() default "";
+    String description() default "";
 
 }

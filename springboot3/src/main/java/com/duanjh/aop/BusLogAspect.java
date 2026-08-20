@@ -44,7 +44,7 @@ public class BusLogAspect {
 
         String className = joinPoint.getTarget().getClass().getName();
         String methodName = signature.getName();
-        String methodDesc = StringUtils.isBlank(busLogAnnotation.descption()) ? "未指定方法描述" : busLogAnnotation.descption();
+        String methodDesc = StringUtils.isBlank(busLogAnnotation.description()) ? "未指定方法描述" : busLogAnnotation.description();
 
         log.info("【BusLog Annotation】Start: {}:{}  {}", className, methodName, methodDesc);
         Object result = joinPoint.proceed();

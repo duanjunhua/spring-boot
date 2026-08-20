@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/aop")
 public class BusLogController {
 
-    @BusLog(descption = "测试自定义注解使用")
+    @BusLog(description = "测试自定义注解使用")
     @GetMapping("/access")
     public String accessSelfAnnotation(){
         return "Ok";

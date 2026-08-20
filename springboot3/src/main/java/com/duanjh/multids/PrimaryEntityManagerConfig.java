@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories(basePackages = {"com.duanjh.jpa.repository"},
+@EnableJpaRepositories(basePackages = {"com.duanjh.jpa.repository", "com.duanjh.warmflow.repository"},
         entityManagerFactoryRef ="primaryEntityManagerFactory", transactionManagerRef = "primaryTransactionManager")
 public class PrimaryEntityManagerConfig {
 
@@ -42,7 +42,7 @@ public class PrimaryEntityManagerConfig {
     public LocalContainerEntityManagerFactoryBean primaryEntityManagerFactory(EntityManagerFactoryBuilder builder) {
         Map<String, String> map = new HashMap<>();
         map.put("hibernate.show_sql", "true");
-        return builder.dataSource(primaryDs).packages("com.duanjh.jpa").properties(map).persistenceUnit("primaryUnit").build();
+        return builder.dataSource(primaryDs).packages("com.duanjh.jpa", "com.duanjh.warmflow.jpa").properties(map).persistenceUnit("primaryUnit").build();
     }
     @Primary
     @Bean(name = "primaryTransactionManager")
